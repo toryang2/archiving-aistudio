@@ -1,0 +1,6 @@
+{
+  "name": "Assessor Tax Declaration Archive",
+  "description": "Real property assessment and tax declaration history archive with property lineage tracking, PSGC barangay integration, and document management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
