@@ -67,6 +67,8 @@ export const CertificationsView: React.FC<CertificationsViewProps> = ({
         c.requesterName.toLowerCase().includes(q) ||
         c.purpose.toLowerCase().includes(q) ||
         c.preparedBy.toLowerCase().includes(q) ||
+        (c.verifiedBy && c.verifiedBy.toLowerCase().includes(q)) ||
+        (c.approvedBy && c.approvedBy.toLowerCase().includes(q)) ||
         c.placeIssued.toLowerCase().includes(q);
 
       const matchesPurpose = selectedPurpose === 'ALL' || c.purpose === selectedPurpose;
@@ -251,7 +253,7 @@ export const CertificationsView: React.FC<CertificationsViewProps> = ({
                 <th className="py-3 px-3 bg-blue-50/50 text-blue-900 text-right">Amount</th>
                 <th className="py-3 px-3">Date & Place Issued</th>
                 <th className="py-3 px-3">Purpose</th>
-                <th className="py-3 px-3">Prepared By</th>
+                <th className="py-3 px-3">3 Signatories</th>
                 <th className="py-3 px-4 text-center">Actions</th>
               </tr>
             </thead>
@@ -319,10 +321,25 @@ export const CertificationsView: React.FC<CertificationsViewProps> = ({
                       )}
                     </td>
 
-                    {/* Prepared By */}
+                    {/* 3 Signatories */}
                     <td className="py-3 px-3">
-                      <p className="font-semibold text-slate-800">{cert.preparedBy}</p>
-                      <span className="text-[10px] text-slate-400 block">Signatory: {cert.approvedBy}</span>
+                      <div className="space-y-1 text-[10px]">
+                        <div className="flex items-center gap-1" title={`Prepared by: ${cert.preparedBy} (${cert.preparedByTitle || 'Records Staff'})`}>
+                          <span className="w-3 h-3 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-[8px] shrink-0">1</span>
+                          <span className="text-slate-500 font-normal">Prep:</span>
+                          <span className="font-medium text-slate-800 truncate max-w-[130px]">{cert.preparedBy}</span>
+                        </div>
+                        <div className="flex items-center gap-1" title={`Verified by: ${cert.verifiedBy || 'N/A'} (${cert.verifiedByTitle || 'Appraiser'})`}>
+                          <span className="w-3 h-3 rounded-full bg-amber-100 text-amber-800 font-bold flex items-center justify-center text-[8px] shrink-0">2</span>
+                          <span className="text-slate-500 font-normal">Ver:</span>
+                          <span className="font-medium text-slate-800 truncate max-w-[130px]">{cert.verifiedBy || '—'}</span>
+                        </div>
+                        <div className="flex items-center gap-1" title={`${cert.approvalLabel || 'Approved by'}: ${cert.approvedBy} (${cert.approvedByTitle || 'Municipal Assessor'})`}>
+                          <span className="w-3 h-3 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center text-[8px] shrink-0">3</span>
+                          <span className="text-slate-500 font-normal">Appr:</span>
+                          <span className="font-bold text-emerald-900 truncate max-w-[130px]">{cert.approvedBy}</span>
+                        </div>
+                      </div>
                     </td>
 
                     {/* Actions */}

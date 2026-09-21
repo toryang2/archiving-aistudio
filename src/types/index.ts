@@ -184,7 +184,15 @@ export interface CertificationRequest {
   dateIssued: string; // Date Issued (YYYY-MM-DD)
   placeIssued: string; // Place Issued (e.g. "Municipality of Taytay, Rizal")
   purpose: string; // Purpose (e.g. "Bank Loan Application", "BIR eCAR", "Transfer of Title")
-  preparedBy: string; // Prepared by (e.g. staff name / Records Officer)
+  
+  // 3 Official Signatories
+  preparedBy: string; // Prepared by (e.g. Assessment Clerk / Records Officer)
+  preparedByTitle?: string; // Prepared by designation/title
+  verifiedBy: string; // Verified and checked by: (e.g. Appraiser / Tax Mapper)
+  verifiedByTitle?: string; // Verified by designation/title
+  approvedBy: string; // Approved by: or Certified correct as to available record/s:
+  approvedByTitle?: string; // Approved by designation/title
+  approvalLabel?: 'Approved by:' | 'Certified correct as to available record/s:'; // Configurable header for 3rd signatory
   
   // Certification Type & Status
   certificationType: 
@@ -193,7 +201,6 @@ export interface CertificationRequest {
     | 'Certificate of Property Assessment'
     | 'Certificate of Non-Improvement'
     | 'Certificate of Total Property Holdings';
-  approvedBy: string; // Municipal Assessor
   status: 'Issued' | 'Pending' | 'Released';
   remarks?: string;
   createdAt: string;

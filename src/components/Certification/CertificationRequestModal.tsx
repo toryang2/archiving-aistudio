@@ -13,7 +13,8 @@ import {
   Printer, 
   HelpCircle,
   Building,
-  ShieldCheck
+  ShieldCheck,
+  FileSignature
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { CertificationRequest, TaxDeclaration } from '../../types';
@@ -73,8 +74,32 @@ export const CertificationRequestModal: React.FC<CertificationRequestModalProps>
   const [dateIssued, setDateIssued] = useState<string>(certificationToEdit?.dateIssued || todayStr);
   const [placeIssued, setPlaceIssued] = useState<string>(certificationToEdit?.placeIssued || defaultPlace);
   const [purpose, setPurpose] = useState<string>(certificationToEdit?.purpose || 'Bank Loan Application');
+
+  // Signatory 1: Prepared by
   const [preparedBy, setPreparedBy] = useState<string>(
     certificationToEdit?.preparedBy || `${currentUser.fullName}${currentUser.role ? ` (${currentUser.role})` : ''}`
+  );
+  const [preparedByTitle, setPreparedByTitle] = useState<string>(
+    certificationToEdit?.preparedByTitle || 'Assessment Records Officer I'
+  );
+
+  // Signatory 2: Verified and checked by:
+  const [verifiedBy, setVerifiedBy] = useState<string>(
+    certificationToEdit?.verifiedBy || settings.appraiserName || 'Mark Lester G. Reyes, REA'
+  );
+  const [verifiedByTitle, setVerifiedByTitle] = useState<string>(
+    certificationToEdit?.verifiedByTitle || 'Local Assessment Operations Officer II / Appraiser'
+  );
+
+  // Signatory 3: Approved by or Certified correct as to available record/s:
+  const [approvedBy, setApprovedBy] = useState<string>(
+    certificationToEdit?.approvedBy || settings.municipalAssessor || 'Atty. Eduardo M. Santos, REA, REB'
+  );
+  const [approvedByTitle, setApprovedByTitle] = useState<string>(
+    certificationToEdit?.approvedByTitle || 'Municipal Assessor'
+  );
+  const [approvalLabel, setApprovalLabel] = useState<'Approved by:' | 'Certified correct as to available record/s:'>(
+    certificationToEdit?.approvalLabel || 'Approved by:'
   );
 
   // Requester details
@@ -95,9 +120,6 @@ export const CertificationRequestModal: React.FC<CertificationRequestModalProps>
   // Certification Type & Status
   const [certificationType, setCertificationType] = useState<CertificationRequest['certificationType']>(
     certificationToEdit?.certificationType || 'Certified True Copy of Tax Declaration'
-  );
-  const [approvedBy, setApprovedBy] = useState<string>(
-    certificationToEdit?.approvedBy || settings.municipalAssessor || 'Atty. Eduardo M. Santos, REA, REB'
   );
   const [status, setStatus] = useState<CertificationRequest['status']>(certificationToEdit?.status || 'Issued');
   const [remarks, setRemarks] = useState<string>(certificationToEdit?.remarks || '');
@@ -154,6 +176,12 @@ export const CertificationRequestModal: React.FC<CertificationRequestModalProps>
     if (!preparedBy.trim()) {
       newErrors.preparedBy = 'Prepared by name is required.';
     }
+    if (!verifiedBy.trim()) {
+      newErrors.verifiedBy = 'Verified and checked by name is required.';
+    }
+    if (!approvedBy.trim()) {
+      newErrors.approvedBy = 'Approving official name is required.';
+    }
     if (!requesterName.trim()) {
       newErrors.requesterName = 'Requester name is required.';
     }
@@ -176,12 +204,17 @@ export const CertificationRequestModal: React.FC<CertificationRequestModalProps>
         placeIssued: placeIssued.trim(),
         purpose: purpose.trim(),
         preparedBy: preparedBy.trim(),
+        preparedByTitle: preparedByTitle.trim(),
+        verifiedBy: verifiedBy.trim(),
+        verifiedByTitle: verifiedByTitle.trim(),
+        approvedBy: approvedBy.trim(),
+        approvedByTitle: approvedByTitle.trim(),
+        approvalLabel: approvalLabel,
         requesterName: requesterName.trim(),
         requesterRelation,
         requesterAddress: requesterAddress.trim(),
         requesterContact: requesterContact.trim(),
         certificationType,
-        approvedBy: approvedBy.trim(),
         status,
         remarks: remarks.trim(),
       });
@@ -194,12 +227,17 @@ export const CertificationRequestModal: React.FC<CertificationRequestModalProps>
           placeIssued: placeIssued.trim(),
           purpose: purpose.trim(),
           preparedBy: preparedBy.trim(),
+          preparedByTitle: preparedByTitle.trim(),
+          verifiedBy: verifiedBy.trim(),
+          verifiedByTitle: verifiedByTitle.trim(),
+          approvedBy: approvedBy.trim(),
+          approvedByTitle: approvedByTitle.trim(),
+          approvalLabel: approvalLabel,
           requesterName: requesterName.trim(),
           requesterRelation,
           requesterAddress: requesterAddress.trim(),
           requesterContact: requesterContact.trim(),
           certificationType,
-          approvedBy: approvedBy.trim(),
           status,
           remarks: remarks.trim(),
         });
@@ -233,8 +271,13 @@ export const CertificationRequestModal: React.FC<CertificationRequestModalProps>
         placeIssued: placeIssued.trim(),
         purpose: purpose.trim(),
         preparedBy: preparedBy.trim(),
-        certificationType,
+        preparedByTitle: preparedByTitle.trim(),
+        verifiedBy: verifiedBy.trim(),
+        verifiedByTitle: verifiedByTitle.trim(),
         approvedBy: approvedBy.trim(),
+        approvedByTitle: approvedByTitle.trim(),
+        approvalLabel: approvalLabel,
+        certificationType,
         status,
         remarks: remarks.trim(),
       });
@@ -523,28 +566,6 @@ export const CertificationRequestModal: React.FC<CertificationRequestModalProps>
                 {errors.purpose && <p className="text-[11px] text-rose-600 mt-1">{errors.purpose}</p>}
               </div>
 
-              {/* Prepared By */}
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
-                  <span>Prepared By <span className="text-rose-500">*</span></span>
-                  <span className="text-[10px] text-slate-400 font-normal">Records Officer / Assessment Staff</span>
-                </label>
-                <div className="relative">
-                  <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    id="cert-prepared-by"
-                    type="text"
-                    value={preparedBy}
-                    onChange={(e) => setPreparedBy(e.target.value)}
-                    placeholder="Enter name and title of preparing staff"
-                    className={`w-full pl-9 pr-3 py-2 text-xs bg-white border rounded-lg font-medium text-slate-900 focus:outline-hidden ${
-                      errors.preparedBy ? 'border-rose-400 focus:border-rose-500' : 'border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                    }`}
-                  />
-                </div>
-                {errors.preparedBy && <p className="text-[11px] text-rose-600 mt-1">{errors.preparedBy}</p>}
-              </div>
-
             </div>
           </div>
 
@@ -621,52 +642,234 @@ export const CertificationRequestModal: React.FC<CertificationRequestModalProps>
             </div>
           </div>
 
-          {/* Section 4: Certification Type & Administrative Approval */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Certificate Form Type
-              </label>
-              <select
-                id="cert-type-select"
-                value={certificationType}
-                onChange={(e) => setCertificationType(e.target.value as CertificationRequest['certificationType'])}
-                className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-hidden focus:border-blue-500 font-medium"
-              >
-                <option value="Certified True Copy of Tax Declaration">Certified True Copy of Tax Declaration</option>
-                <option value="Certificate of Tax Declaration">Certificate of Tax Declaration (Holding)</option>
-                <option value="Certificate of Property Assessment">Certificate of Property Assessment</option>
-                <option value="Certificate of Non-Improvement">Certificate of Non-Improvement</option>
-                <option value="Certificate of Total Property Holdings">Certificate of Total Property Holdings</option>
-              </select>
+          {/* Section 4: Official Signatories (3 Required Signatories) */}
+          <div className="bg-blue-50/40 border border-blue-200/80 rounded-xl p-4 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-blue-200/80">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-blue-950 flex items-center gap-1.5">
+                <FileSignature className="w-4 h-4 text-blue-700" />
+                <span>Official Signatories (3 Required Signatories)</span>
+              </h3>
+              <span className="text-[11px] text-blue-800 font-medium">Prepared by • Verified and checked by • Approved / Certified correct</span>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Approving Municipal Assessor
-              </label>
-              <input
-                id="cert-approved-by"
-                type="text"
-                value={approvedBy}
-                onChange={(e) => setApprovedBy(e.target.value)}
-                placeholder="Municipal Assessor Name"
-                className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-hidden focus:border-blue-500"
-              />
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Signatory 1: Prepared by */}
+              <div className="bg-white border border-slate-200 rounded-xl p-3.5 space-y-2.5 shadow-xs flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <span className="w-4 h-4 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center text-[10px] font-bold">1</span>
+                      Prepared by <span className="text-rose-500">*</span>
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-medium">Records Staff</span>
+                  </div>
+                  <div className="space-y-2">
+                    <div>
+                      <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1">
+                        Signatory Full Name <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        id="cert-prepared-by"
+                        type="text"
+                        value={preparedBy}
+                        onChange={(e) => setPreparedBy(e.target.value)}
+                        placeholder="Staff Name"
+                        className={`w-full px-2.5 py-1.5 text-xs bg-slate-50/50 border rounded-lg font-semibold text-slate-900 focus:outline-hidden ${
+                          errors.preparedBy ? 'border-rose-400 focus:border-rose-500' : 'border-slate-300 focus:border-blue-500'
+                        }`}
+                      />
+                      {errors.preparedBy && <p className="text-[10px] text-rose-600 mt-0.5">{errors.preparedBy}</p>}
+                    </div>
 
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-medium text-slate-600 mb-1">
-                Internal Remarks / Reference Notes (Optional)
-              </label>
-              <input
-                id="cert-remarks"
-                type="text"
-                value={remarks}
-                onChange={(e) => setRemarks(e.target.value)}
-                placeholder="e.g. Validated against Registry of Deeds TCT; Special Power of Attorney attached."
-                className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-hidden focus:border-blue-500"
-              />
+                    <div>
+                      <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1">
+                        Designation / Position
+                      </label>
+                      <input
+                        id="cert-prepared-by-title"
+                        type="text"
+                        value={preparedByTitle}
+                        onChange={(e) => setPreparedByTitle(e.target.value)}
+                        placeholder="e.g. Assessment Records Officer I"
+                        className="w-full px-2.5 py-1.5 text-xs bg-slate-50/50 border border-slate-300 rounded-lg text-slate-700 focus:outline-hidden focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-400 italic pt-1 border-t border-slate-100">
+                  Prepares the certification docket and retrieves physical roll.
+                </p>
+              </div>
+
+              {/* Signatory 2: Verified and checked by: */}
+              <div className="bg-white border border-slate-200 rounded-xl p-3.5 space-y-2.5 shadow-xs flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <span className="w-4 h-4 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center text-[10px] font-bold">2</span>
+                      Verified and checked by: <span className="text-rose-500">*</span>
+                    </span>
+                    <span className="text-[10px] text-amber-700 font-medium">Examiner / Appraiser</span>
+                  </div>
+                  <div className="space-y-2">
+                    <div>
+                      <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1">
+                        Signatory Full Name <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        id="cert-verified-by"
+                        type="text"
+                        value={verifiedBy}
+                        onChange={(e) => setVerifiedBy(e.target.value)}
+                        placeholder="Examiner / Appraiser Name"
+                        className={`w-full px-2.5 py-1.5 text-xs bg-slate-50/50 border rounded-lg font-semibold text-slate-900 focus:outline-hidden ${
+                          errors.verifiedBy ? 'border-rose-400 focus:border-rose-500' : 'border-slate-300 focus:border-blue-500'
+                        }`}
+                      />
+                      {errors.verifiedBy && <p className="text-[10px] text-rose-600 mt-0.5">{errors.verifiedBy}</p>}
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1">
+                        Designation / Position
+                      </label>
+                      <input
+                        id="cert-verified-by-title"
+                        type="text"
+                        value={verifiedByTitle}
+                        onChange={(e) => setVerifiedByTitle(e.target.value)}
+                        placeholder="e.g. Local Assessment Operations Officer II / Appraiser"
+                        className="w-full px-2.5 py-1.5 text-xs bg-slate-50/50 border border-slate-300 rounded-lg text-slate-700 focus:outline-hidden focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-400 italic pt-1 border-t border-slate-100">
+                  Verifies PIN, boundaries, classification, and assessed valuations.
+                </p>
+              </div>
+
+              {/* Signatory 3: Approved by or Certified correct */}
+              <div className="bg-white border border-slate-200 rounded-xl p-3.5 space-y-2.5 shadow-xs flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center text-[10px] font-bold">3</span>
+                      Approval Authority <span className="text-rose-500">*</span>
+                    </span>
+                    <span className="text-[10px] text-emerald-700 font-medium">Department Head</span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div>
+                      <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1">
+                        Signatory Heading Clause
+                      </label>
+                      <select
+                        id="cert-approval-label"
+                        value={approvalLabel}
+                        onChange={(e) => setApprovalLabel(e.target.value as 'Approved by:' | 'Certified correct as to available record/s:')}
+                        className="w-full px-2.5 py-1.5 text-xs bg-emerald-50/50 border border-emerald-300 rounded-lg font-semibold text-emerald-900 focus:outline-hidden focus:border-emerald-500"
+                      >
+                        <option value="Approved by:">Approved by:</option>
+                        <option value="Certified correct as to available record/s:">Certified correct as to available record/s:</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1">
+                        Signatory Full Name <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        id="cert-approved-by"
+                        type="text"
+                        value={approvedBy}
+                        onChange={(e) => setApprovedBy(e.target.value)}
+                        placeholder="Municipal Assessor Name"
+                        className={`w-full px-2.5 py-1.5 text-xs bg-slate-50/50 border rounded-lg font-semibold text-slate-900 focus:outline-hidden ${
+                          errors.approvedBy ? 'border-rose-400 focus:border-rose-500' : 'border-slate-300 focus:border-blue-500'
+                        }`}
+                      />
+                      {errors.approvedBy && <p className="text-[10px] text-rose-600 mt-0.5">{errors.approvedBy}</p>}
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1">
+                        Designation / Position
+                      </label>
+                      <input
+                        id="cert-approved-by-title"
+                        type="text"
+                        value={approvedByTitle}
+                        onChange={(e) => setApprovedByTitle(e.target.value)}
+                        placeholder="e.g. Municipal Assessor"
+                        className="w-full px-2.5 py-1.5 text-xs bg-slate-50/50 border border-slate-300 rounded-lg text-slate-700 focus:outline-hidden focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-400 italic pt-1 border-t border-slate-100">
+                  Official certifying authority approving issuance to requester.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 5: Certificate Form Type & Administrative Details */}
+          <div className="bg-slate-50/70 border border-slate-200 rounded-xl p-4 space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5 pb-2 border-b border-slate-200">
+              <FileText className="w-4 h-4 text-blue-600" />
+              <span>Certificate Specification & Remarks</span>
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Certificate Form Type
+                </label>
+                <select
+                  id="cert-type-select"
+                  value={certificationType}
+                  onChange={(e) => setCertificationType(e.target.value as CertificationRequest['certificationType'])}
+                  className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-hidden focus:border-blue-500 font-medium"
+                >
+                  <option value="Certified True Copy of Tax Declaration">Certified True Copy of Tax Declaration</option>
+                  <option value="Certificate of Tax Declaration">Certificate of Tax Declaration (Holding)</option>
+                  <option value="Certificate of Property Assessment">Certificate of Property Assessment</option>
+                  <option value="Certificate of Non-Improvement">Certificate of Non-Improvement</option>
+                  <option value="Certificate of Total Property Holdings">Certificate of Total Property Holdings</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Issuance Standing / Status
+                </label>
+                <select
+                  id="cert-status-select"
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as CertificationRequest['status'])}
+                  className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-hidden focus:border-blue-500 font-medium"
+                >
+                  <option value="Issued">Issued (Ready for Official Signature & Release)</option>
+                  <option value="Pending">Pending (Under Verification)</option>
+                  <option value="Released">Released (Claimed by Requester)</option>
+                </select>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-medium text-slate-600 mb-1">
+                  Internal Remarks / Reference Notes (Optional)
+                </label>
+                <input
+                  id="cert-remarks"
+                  type="text"
+                  value={remarks}
+                  onChange={(e) => setRemarks(e.target.value)}
+                  placeholder="e.g. Validated against Registry of Deeds TCT; Special Power of Attorney attached."
+                  className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-hidden focus:border-blue-500"
+                />
+              </div>
             </div>
           </div>
 

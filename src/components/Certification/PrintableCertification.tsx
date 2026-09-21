@@ -269,24 +269,51 @@ export const PrintableCertification: React.FC<PrintableCertificationProps> = ({
           Office of the Municipal Assessor, <strong>{certification.placeIssued}</strong>.
         </p>
 
-        {/* Signatures */}
-        <div className="grid grid-cols-2 gap-8 mb-12 font-sans">
-          {/* Prepared by */}
-          <div>
-            <span className="text-xs text-slate-500 font-semibold block mb-10">Prepared by:</span>
-            <div className="border-b border-slate-800 pb-1">
-              <p className="font-bold text-sm text-slate-900 uppercase">{certification.preparedBy}</p>
+        {/* 3 Official Signatories */}
+        <div className="grid grid-cols-3 gap-6 mb-10 font-sans">
+          {/* Signatory 1: Prepared by */}
+          <div className="flex flex-col justify-end">
+            <span className="text-[11px] text-slate-600 font-semibold block mb-8">
+              Prepared by:
+            </span>
+            <div className="border-b border-slate-900 pb-1">
+              <p className="font-bold text-xs sm:text-sm text-slate-900 uppercase">
+                {certification.preparedBy}
+              </p>
             </div>
-            <p className="text-[11px] text-slate-500 mt-1">Local Assessment Operations / Records Officer</p>
+            <p className="text-[10px] text-slate-600 mt-1 leading-tight">
+              {certification.preparedByTitle || 'Assessment Records Staff'}
+            </p>
           </div>
 
-          {/* Approved by */}
-          <div className="text-right">
-            <span className="text-xs text-slate-500 font-semibold block mb-10">Approved & Verified by:</span>
-            <div className="border-b border-slate-800 pb-1">
-              <p className="font-bold text-sm text-slate-900 uppercase">{certification.approvedBy}</p>
+          {/* Signatory 2: Verified and checked by: */}
+          <div className="flex flex-col justify-end">
+            <span className="text-[11px] text-slate-600 font-semibold block mb-8">
+              Verified and checked by:
+            </span>
+            <div className="border-b border-slate-900 pb-1">
+              <p className="font-bold text-xs sm:text-sm text-slate-900 uppercase">
+                {certification.verifiedBy || 'ENGR. RAMON S. VALDEZ'}
+              </p>
             </div>
-            <p className="text-[11px] text-slate-500 mt-1">Municipal Assessor</p>
+            <p className="text-[10px] text-slate-600 mt-1 leading-tight">
+              {certification.verifiedByTitle || 'Local Assessment Operations Officer II / Appraiser'}
+            </p>
+          </div>
+
+          {/* Signatory 3: Approved by or Certified correct */}
+          <div className="flex flex-col justify-end">
+            <span className="text-[11px] text-slate-600 font-semibold block mb-8">
+              {certification.approvalLabel || 'Approved by:'}
+            </span>
+            <div className="border-b border-slate-900 pb-1">
+              <p className="font-bold text-xs sm:text-sm text-slate-900 uppercase">
+                {certification.approvedBy}
+              </p>
+            </div>
+            <p className="text-[10px] text-slate-600 mt-1 leading-tight">
+              {certification.approvedByTitle || 'Municipal Assessor'}
+            </p>
           </div>
         </div>
 
