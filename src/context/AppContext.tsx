@@ -8,7 +8,8 @@ import {
   DocumentAttachment,
   KindOfPropertyConfig,
   GeneralClassConfig,
-  PSGCBarangay
+  PSGCBarangay,
+  CertificationRequest
 } from '../types';
 import { storageService } from '../services/storage';
 import { supabaseService, SupabaseConfig } from '../services/supabase';
@@ -80,6 +81,12 @@ interface AppContextType {
   // Audit Logs
   auditLogs: AuditLog[];
   
+  // Certifications
+  certifications: CertificationRequest[];
+  createCertificationRequest: (data: Omit<CertificationRequest, 'id' | 'createdAt' | 'updatedAt'>) => CertificationRequest;
+  updateCertificationRequest: (id: string, data: Partial<CertificationRequest>) => void;
+  deleteCertificationRequest: (id: string) => void;
+  
   // Toasts
   toasts: ToastInfo[];
   showToast: (message: string, type?: 'success' | 'info' | 'warning' | 'error') => void;
@@ -120,6 +127,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [users, setUsers] = useState<UserAccount[]>(() => storageService.getUsers());
   const [currentUser, setCurrentUser] = useState<UserAccount>(() => storageService.getCurrentUser());
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(() => storageService.getAuditLogs());
+  const [certifications, setCertifications] = useState<CertificationRequest[]>(() => storageService.getCertifications());
   const [filters, setFilters] = useState<FilterOptions>(initialFilters);
   const [toasts, setToasts] = useState<ToastInfo[]>([]);
 
@@ -144,6 +152,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   useEffect(() => {
     storageService.saveCurrentUser(currentUser);
   }, [currentUser]);
+
+  useEffect(() => {
+    storageService.saveCertifications(certifications);
+  }, [certifications]);
 
   // Check initial connection and optionally auto-pull
   useEffect(() => {
@@ -590,6 +602,61 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     showToast('User deleted.', 'info');
   };
 
+  // Certification Requests Handlers
+  const createCertificationRequest = (data: Omit<CertificationRequest, 'id' | 'createdAt' | 'updatedAt'>): CertificationRequest => {
+    const newId = 'cert-' + Date.now();
+    const nowStr = new Date().toISOString().split('T')[0];
+    const certCount = certifications.length + 1;
+    const autoCertNumber = data.certNumber || `CERT-${new Date().getFullYear()}-${String(certCount).padStart(5, '0')}`;
+    
+    const newRecord: CertificationRequest = {
+      ...data,
+      id: newId,
+      certNumber: autoCertNumber,
+      createdAt: nowStr,
+      updatedAt: nowStr,
+    };
+
+    setCertifications((prev) => [newRecord, ...prev]);
+
+    storageService.addAuditLog({
+      userId: currentUser.id,
+      userName: currentUser.fullName,
+      action: 'CERTIFICATION_ISSUED',
+      targetTdNumber: newRecord.tdNumber,
+      targetPin: newRecord.pin,
+      description: `Issued ${newRecord.certificationType} (${newRecord.certNumber}) for TD ${newRecord.tdNumber} (O.R. #${newRecord.receiptNumber}, ₱${newRecord.amount.toLocaleString()}, Purpose: ${newRecord.purpose}, Prepared by: ${newRecord.preparedBy}).`,
+    });
+
+    setAuditLogs(storageService.getAuditLogs());
+    showToast(`Certification ${newRecord.certNumber} issued successfully (O.R. #${newRecord.receiptNumber}).`);
+    return newRecord;
+  };
+
+  const updateCertificationRequest = (id: string, data: Partial<CertificationRequest>) => {
+    const nowStr = new Date().toISOString().split('T')[0];
+    setCertifications((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, ...data, updatedAt: nowStr } : c))
+    );
+    showToast('Certification details updated.');
+  };
+
+  const deleteCertificationRequest = (id: string) => {
+    const target = certifications.find((c) => c.id === id);
+    setCertifications((prev) => prev.filter((c) => c.id !== id));
+    if (target) {
+      storageService.addAuditLog({
+        userId: currentUser.id,
+        userName: currentUser.fullName,
+        action: 'CERTIFICATION_DELETED',
+        targetTdNumber: target.tdNumber,
+        description: `Deleted certification record ${target.certNumber} (O.R. #${target.receiptNumber}).`,
+      });
+      setAuditLogs(storageService.getAuditLogs());
+    }
+    showToast('Certification request deleted.', 'info');
+  };
+
   const resetData = () => {
     storageService.resetToDefault();
     setTaxDeclarations(storageService.getTaxDeclarations());
@@ -597,6 +664,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setUsers(storageService.getUsers());
     setCurrentUser(storageService.getCurrentUser());
     setAuditLogs(storageService.getAuditLogs());
+    setCertifications(storageService.getCertifications());
     setSelectedProperty(null);
     showToast('All data has been reset to factory defaults.', 'info');
   };
@@ -607,6 +675,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       settings,
       users,
       auditLogs,
+      certifications,
       exportedAt: new Date().toISOString(),
       version: '1.0',
     };
@@ -628,6 +697,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (parsed.settings) setSettings(parsed.settings);
         if (parsed.users) setUsers(parsed.users);
         if (parsed.auditLogs) setAuditLogs(parsed.auditLogs);
+        if (parsed.certifications && Array.isArray(parsed.certifications)) {
+          setCertifications(parsed.certifications);
+        }
         showToast('Database imported successfully from JSON file.');
         return true;
       }
@@ -748,6 +820,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         updateUser,
         deleteUser,
         auditLogs,
+        certifications,
+        createCertificationRequest,
+        updateCertificationRequest,
+        deleteCertificationRequest,
         toasts,
         showToast,
         removeToast,

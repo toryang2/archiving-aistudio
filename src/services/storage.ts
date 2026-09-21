@@ -1,4 +1,4 @@
-import { AppSettings, AuditLog, DocumentAttachment, GeneralClassConfig, KindOfPropertyConfig, TaxDeclaration, UserAccount } from '../types';
+import { AppSettings, AuditLog, CertificationRequest, DocumentAttachment, GeneralClassConfig, KindOfPropertyConfig, TaxDeclaration, UserAccount } from '../types';
 
 const STORAGE_KEYS = {
   TAX_DECLARATIONS: 'rpt_tax_declarations_v1',
@@ -6,6 +6,7 @@ const STORAGE_KEYS = {
   USERS: 'rpt_users_v1',
   CURRENT_USER: 'rpt_current_user_v1',
   AUDIT_LOGS: 'rpt_audit_logs_v1',
+  CERTIFICATIONS: 'rpt_certifications_v1',
 };
 
 const DEFAULT_KINDS_OF_PROPERTY: KindOfPropertyConfig[] = [
@@ -520,6 +521,77 @@ const DEFAULT_AUDIT_LOGS: AuditLog[] = [
   },
 ];
 
+const DEFAULT_CERTIFICATIONS: CertificationRequest[] = [
+  {
+    id: 'cert-001',
+    certNumber: 'CERT-2026-00089',
+    taxDeclarationId: 'td-003',
+    tdNumber: 'TD-2024-04-001-00892',
+    pin: '024-04-0001-001-10A-01',
+    ownerName: 'Mateo L. Guerrero',
+    propertyLocation: 'Dolores (Poblacion), Taytay, Rizal',
+    titleNumber: 'TCT No. 184920',
+    lotNumber: 'Lot 10-A',
+    surveyNumber: 'Psd-04-184520-A',
+    area: 600,
+    areaUnit: 'sqm',
+    assessedValue: 1200000,
+    marketValue: 6000000,
+    kindOfProperty: 'Land',
+    generalClass: 'Residential',
+    propertyState: 'CURRENT',
+    requesterName: 'Mateo L. Guerrero',
+    requesterRelation: 'Registered Owner',
+    requesterAddress: '142-A Rizal Avenue, Dolores, Taytay, Rizal',
+    receiptNumber: 'OR-2026-08912',
+    amount: 150.00,
+    dateIssued: '2026-09-18',
+    placeIssued: 'Office of the Municipal Treasurer, Taytay, Rizal',
+    purpose: 'Bank Loan Application (BDO Mortgage)',
+    preparedBy: 'Maria Cristina V. Alcantara',
+    certificationType: 'Certified True Copy of Tax Declaration',
+    approvedBy: 'Atty. Eduardo M. Santos, REA, REB',
+    status: 'Issued',
+    remarks: 'Official certified true copy requested for bank mortgage verification.',
+    createdAt: '2026-09-18',
+    updatedAt: '2026-09-18',
+  },
+  {
+    id: 'cert-002',
+    certNumber: 'CERT-2026-00094',
+    taxDeclarationId: 'td-004',
+    tdNumber: 'TD-2023-04-003-00412',
+    pin: '024-04-0003-005-22',
+    ownerName: 'Helena S. Bautista',
+    propertyLocation: 'San Isidro, Taytay, Rizal',
+    titleNumber: 'TCT No. 209148',
+    lotNumber: 'Lot 15-B',
+    surveyNumber: 'Psd-04-099231',
+    area: 350,
+    areaUnit: 'sqm',
+    assessedValue: 700000,
+    marketValue: 3500000,
+    kindOfProperty: 'Land',
+    generalClass: 'Residential',
+    propertyState: 'CURRENT',
+    requesterName: 'Atty. Roberto C. Panganiban',
+    requesterRelation: 'Authorized Representative',
+    requesterAddress: 'Unit 402 Cityland Tower, Ortigas Center, Pasig City',
+    receiptNumber: 'OR-2026-09044',
+    amount: 200.00,
+    dateIssued: '2026-09-20',
+    placeIssued: 'Office of the Municipal Treasurer, Taytay, Rizal',
+    purpose: 'BIR eCAR / Capital Gains Tax Assessment',
+    preparedBy: 'Mark Lester G. Reyes, REA',
+    certificationType: 'Certificate of Tax Declaration',
+    approvedBy: 'Atty. Eduardo M. Santos, REA, REB',
+    status: 'Issued',
+    remarks: 'Presented Notarized Special Power of Attorney dated 2026-09-15.',
+    createdAt: '2026-09-20',
+    updatedAt: '2026-09-20',
+  },
+];
+
 export const storageService = {
   getTaxDeclarations(): TaxDeclaration[] {
     const raw = localStorage.getItem(STORAGE_KEYS.TAX_DECLARATIONS);
@@ -622,11 +694,43 @@ export const storageService = {
     return newLog;
   },
 
+  getCertifications(): CertificationRequest[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.CERTIFICATIONS);
+    if (!raw) {
+      this.saveCertifications(DEFAULT_CERTIFICATIONS);
+      return DEFAULT_CERTIFICATIONS;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return DEFAULT_CERTIFICATIONS;
+    }
+  },
+
+  saveCertifications(certs: CertificationRequest[]): void {
+    localStorage.setItem(STORAGE_KEYS.CERTIFICATIONS, JSON.stringify(certs));
+  },
+
+  addCertification(cert: Omit<CertificationRequest, 'id' | 'createdAt' | 'updatedAt'>): CertificationRequest {
+    const list = this.getCertifications();
+    const nowStr = new Date().toISOString().split('T')[0];
+    const newRecord: CertificationRequest = {
+      ...cert,
+      id: 'cert-' + Date.now(),
+      createdAt: nowStr,
+      updatedAt: nowStr,
+    };
+    const updated = [newRecord, ...list];
+    this.saveCertifications(updated);
+    return newRecord;
+  },
+
   resetToDefault(): void {
     localStorage.removeItem(STORAGE_KEYS.TAX_DECLARATIONS);
     localStorage.removeItem(STORAGE_KEYS.SETTINGS);
     localStorage.removeItem(STORAGE_KEYS.USERS);
     localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
     localStorage.removeItem(STORAGE_KEYS.AUDIT_LOGS);
+    localStorage.removeItem(STORAGE_KEYS.CERTIFICATIONS);
   },
 };

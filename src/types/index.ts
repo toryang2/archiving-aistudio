@@ -153,6 +153,53 @@ export interface UserAccount {
   createdAt: string;
 }
 
+export interface CertificationRequest {
+  id: string;
+  certNumber: string; // e.g. "CERT-2026-0012"
+  taxDeclarationId: string;
+  tdNumber: string; // e.g. "TD-2024-04-001-00892"
+  pin: string; // Property Identification Number
+  ownerName: string;
+  propertyLocation: string; // Barangay, Municipality, Province
+  titleNumber?: string;
+  lotNumber?: string;
+  surveyNumber?: string;
+  area?: number;
+  areaUnit?: 'sqm' | 'ha';
+  assessedValue: number;
+  marketValue: number;
+  kindOfProperty: string;
+  generalClass: string;
+  propertyState: PropertyState;
+  
+  // Requester Info
+  requesterName: string;
+  requesterRelation: string; // e.g. "Registered Owner", "Authorized Representative", "Heir", "Buyer"
+  requesterAddress?: string;
+  requesterContact?: string;
+  
+  // Official Receipt & Issuance details
+  receiptNumber: string; // Receipt # (Official Receipt No.)
+  amount: number; // Amount paid (e.g. 150.00)
+  dateIssued: string; // Date Issued (YYYY-MM-DD)
+  placeIssued: string; // Place Issued (e.g. "Municipality of Taytay, Rizal")
+  purpose: string; // Purpose (e.g. "Bank Loan Application", "BIR eCAR", "Transfer of Title")
+  preparedBy: string; // Prepared by (e.g. staff name / Records Officer)
+  
+  // Certification Type & Status
+  certificationType: 
+    | 'Certified True Copy of Tax Declaration'
+    | 'Certificate of Tax Declaration'
+    | 'Certificate of Property Assessment'
+    | 'Certificate of Non-Improvement'
+    | 'Certificate of Total Property Holdings';
+  approvedBy: string; // Municipal Assessor
+  status: 'Issued' | 'Pending' | 'Released';
+  remarks?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AuditLog {
   id: string;
   timestamp: string;
@@ -160,11 +207,11 @@ export interface AuditLog {
   userName: string;
   performedByName?: string;
   performedByRole?: string;
-  action: 'CREATE' | 'UPDATE' | 'CANCEL' | 'SUPERSEDE' | 'DELETE' | 'DOCUMENT_UPLOAD' | 'SETTINGS_CHANGE' | 'LOGIN';
+  action: 'CREATE' | 'UPDATE' | 'CANCEL' | 'SUPERSEDE' | 'DELETE' | 'DOCUMENT_UPLOAD' | 'SETTINGS_CHANGE' | 'LOGIN' | 'CERTIFICATION_ISSUED' | 'CERTIFICATION_DELETED';
   targetTdNumber?: string;
   targetPin?: string;
   description: string;
   details?: string;
 }
 
-export type ActiveTab = 'dashboard' | 'properties' | 'lineage' | 'users' | 'settings' | 'audit-logs';
+export type ActiveTab = 'dashboard' | 'properties' | 'lineage' | 'certifications' | 'users' | 'settings' | 'audit-logs';

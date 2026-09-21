@@ -15,17 +15,23 @@ import {
   MapPin,
   ExternalLink,
   ShieldCheck,
-  FileSpreadsheet
+  FileSpreadsheet,
+  FileCheck
 } from 'lucide-react';
 import { TaxDeclaration } from '../../types';
 
 interface DashboardProps {
   onOpenNewPropertyModal: () => void;
+  onOpenNewCertificationModal?: () => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ onOpenNewPropertyModal }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ 
+  onOpenNewPropertyModal,
+  onOpenNewCertificationModal,
+}) => {
   const { 
     taxDeclarations, 
+    certifications,
     settings, 
     setSelectedProperty, 
     setActiveTab, 
@@ -116,6 +122,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ onOpenNewPropertyModal }) 
             >
               <GitBranch className="w-4 h-4" />
               <span>Explore Property Genealogy Tree</span>
+            </button>
+            <button
+              id="dashboard-view-certifications-btn"
+              onClick={() => setActiveTab('certifications')}
+              className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs sm:text-sm rounded-lg border border-white/20 transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <FileCheck className="w-4 h-4 text-blue-200" />
+              <span>Certifications Archive ({certifications.length})</span>
             </button>
           </div>
         </div>

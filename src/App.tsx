@@ -12,9 +12,12 @@ import { PrintableTaxDeclaration } from './components/Property/PrintableTaxDecla
 import { UserManagement } from './components/UserManagement/UserManagement';
 import { SettingsView } from './components/Settings/SettingsView';
 import { AuditLogsView } from './components/Audit/AuditLogsView';
+import { CertificationsView } from './components/Certification/CertificationsView';
+import { CertificationRequestModal } from './components/Certification/CertificationRequestModal';
+import { PrintableCertification } from './components/Certification/PrintableCertification';
 import { LoginModal } from './components/Common/LoginModal';
 import { ToastContainer } from './components/Common/ToastContainer';
-import { TaxDeclaration } from './types';
+import { TaxDeclaration, CertificationRequest } from './types';
 
 const MainLayout: React.FC = () => {
   const { activeTab, selectedProperty, setSelectedProperty } = useApp();
@@ -26,6 +29,13 @@ const MainLayout: React.FC = () => {
   const [supersedingProperty, setSupersedingProperty] = useState<TaxDeclaration | null>(null);
   const [isPrintViewOpen, setIsPrintViewOpen] = useState(false);
   const [printingProperty, setPrintingProperty] = useState<TaxDeclaration | null>(null);
+
+  // Certification state
+  const [isCertModalOpen, setIsCertModalOpen] = useState(false);
+  const [certModalTd, setCertModalTd] = useState<TaxDeclaration | null>(null);
+  const [editingCert, setEditingCert] = useState<CertificationRequest | null>(null);
+  const [isPrintCertOpen, setIsPrintCertOpen] = useState(false);
+  const [printingCert, setPrintingCert] = useState<CertificationRequest | null>(null);
 
   // Handlers for modal actions
   const handleOpenNewProperty = () => {
@@ -45,6 +55,24 @@ const MainLayout: React.FC = () => {
   const handleOpenPrint = (property: TaxDeclaration) => {
     setPrintingProperty(property);
     setIsPrintViewOpen(true);
+  };
+
+  // Certification handlers
+  const handleOpenNewCertification = (property?: TaxDeclaration) => {
+    setEditingCert(null);
+    setCertModalTd(property || null);
+    setIsCertModalOpen(true);
+  };
+
+  const handleOpenEditCertification = (cert: CertificationRequest) => {
+    setEditingCert(cert);
+    setCertModalTd(null);
+    setIsCertModalOpen(true);
+  };
+
+  const handleOpenPrintCertification = (cert: CertificationRequest) => {
+    setPrintingCert(cert);
+    setIsPrintCertOpen(true);
   };
 
   return (
@@ -76,13 +104,17 @@ const MainLayout: React.FC = () => {
               property={printingProperty}
               onBack={() => setIsPrintViewOpen(false)}
             />
+          ) : isPrintCertOpen && printingCert ? (
+            <PrintableCertification
+              certification={printingCert}
+              onBack={() => setIsPrintCertOpen(false)}
+            />
           ) : (
             <>
               {activeTab === 'dashboard' && (
                 <Dashboard
                   onOpenNewPropertyModal={handleOpenNewProperty}
-                  onOpenSupersedeModal={handleOpenSupersede}
-                  onOpenPrintView={handleOpenPrint}
+                  onOpenNewCertificationModal={() => handleOpenNewCertification()}
                 />
               )}
 
@@ -92,6 +124,15 @@ const MainLayout: React.FC = () => {
                   onOpenEditModal={handleOpenEditProperty}
                   onOpenSupersedeModal={handleOpenSupersede}
                   onOpenPrintView={handleOpenPrint}
+                  onOpenCertificationRequest={handleOpenNewCertification}
+                />
+              )}
+
+              {activeTab === 'certifications' && (
+                <CertificationsView
+                  onOpenNewModal={() => handleOpenNewCertification()}
+                  onEditCert={handleOpenEditCertification}
+                  onPrintCert={handleOpenPrintCertification}
                 />
               )}
 
@@ -137,6 +178,21 @@ const MainLayout: React.FC = () => {
           setSelectedProperty(null);
           handleOpenPrint(prop);
         }}
+        onOpenCertificationRequest={(prop) => {
+          setSelectedProperty(null);
+          handleOpenNewCertification(prop);
+        }}
+      />
+
+      <CertificationRequestModal
+        isOpen={isCertModalOpen}
+        onClose={() => {
+          setIsCertModalOpen(false);
+          setEditingCert(null);
+          setCertModalTd(null);
+        }}
+        preselectedProperty={certModalTd}
+        editingCertification={editingCert}
       />
 
       <SupersedeModal

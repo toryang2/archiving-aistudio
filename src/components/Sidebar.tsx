@@ -13,7 +13,8 @@ import {
   MapPin, 
   ShieldCheck, 
   Plus,
-  X
+  X,
+  FileCheck
 } from 'lucide-react';
 import { ActiveTab } from '../types';
 
@@ -28,7 +29,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onCloseMobile,
   onOpenNewPropertyModal,
 }) => {
-  const { activeTab, setActiveTab, taxDeclarations, settings, currentUser } = useApp();
+  const { activeTab, setActiveTab, taxDeclarations, certifications, settings, currentUser } = useApp();
 
   const totalCount = taxDeclarations.length;
   const currentCount = taxDeclarations.filter((t) => t.propertyState === 'CURRENT').length;
@@ -49,6 +50,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Real Property',
       icon: Files,
       badge: totalCount,
+    },
+    {
+      id: 'certifications',
+      label: 'Certifications',
+      icon: FileCheck,
+      badge: certifications.length,
     },
     {
       id: 'dashboard',

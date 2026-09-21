@@ -31,6 +31,7 @@ interface PropertyListProps {
   onOpenEditModal: (property: TaxDeclaration) => void;
   onOpenSupersedeModal: (property: TaxDeclaration) => void;
   onOpenPrintView: (property: TaxDeclaration) => void;
+  onOpenCertificationRequest?: (property: TaxDeclaration) => void;
 }
 
 export const PropertyList: React.FC<PropertyListProps> = ({
@@ -38,6 +39,7 @@ export const PropertyList: React.FC<PropertyListProps> = ({
   onOpenEditModal,
   onOpenSupersedeModal,
   onOpenPrintView,
+  onOpenCertificationRequest,
 }) => {
   const { 
     taxDeclarations, 
@@ -513,6 +515,15 @@ export const PropertyList: React.FC<PropertyListProps> = ({
                       >
                         <Printer className="w-3.5 h-3.5" />
                       </button>
+                      {onOpenCertificationRequest && (
+                        <button
+                          onClick={() => onOpenCertificationRequest(td)}
+                          title="Issue Certification Request (Receipt #, Amount, Purpose)"
+                          className="p-1.5 text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors cursor-pointer"
+                        >
+                          <FileCheck className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                       <button
                         onClick={() => {
                           if (window.confirm(`Are you sure you want to permanently delete Tax Declaration ${td.tdNumber}?`)) {
@@ -776,6 +787,17 @@ export const PropertyList: React.FC<PropertyListProps> = ({
                             >
                               <Share2 className="w-4 h-4" />
                             </button>
+
+                            {onOpenCertificationRequest && (
+                              <button
+                                id={`cert-td-${td.id}`}
+                                onClick={() => onOpenCertificationRequest(td)}
+                                title="Issue Certification Request (Receipt #, Amount, Purpose, etc.)"
+                                className="p-1.5 text-slate-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                              >
+                                <FileCheck className="w-4 h-4" />
+                              </button>
+                            )}
 
                             <button
                               id={`print-td-${td.id}`}

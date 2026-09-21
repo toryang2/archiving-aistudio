@@ -32,6 +32,7 @@ interface PropertyDetailModalProps {
   onOpenEditModal: (property: TaxDeclaration) => void;
   onOpenSupersedeModal: (property: TaxDeclaration) => void;
   onOpenPrintView: (property: TaxDeclaration) => void;
+  onOpenCertificationRequest?: (property: TaxDeclaration) => void;
 }
 
 export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
@@ -40,6 +41,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
   onOpenEditModal,
   onOpenSupersedeModal,
   onOpenPrintView,
+  onOpenCertificationRequest,
 }) => {
   const { 
     settings, 
@@ -663,6 +665,17 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
                 <Share2 className="w-3.5 h-3.5" />
                 <span>Supersede / Issue New TD</span>
               </button>
+              {onOpenCertificationRequest && (
+                <button
+                  id="modal-request-certification-btn"
+                  onClick={() => onOpenCertificationRequest(property)}
+                  className="px-3.5 py-2 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-200 transition-colors flex items-center gap-1.5 cursor-pointer"
+                  title="Issue Official Certification Request (with Receipt #, Amount, Purpose, etc.)"
+                >
+                  <FileCheck className="w-3.5 h-3.5 text-blue-700" />
+                  <span>Request Certification</span>
+                </button>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
