@@ -171,6 +171,10 @@ export interface CertificationRequest {
   kindOfProperty: string;
   generalClass: string;
   propertyState: PropertyState;
+  adminBusinessName?: string;
+  assessmentDate?: string;
+  effectivityDate?: string;
+  ownerAddress?: string;
   
   // Requester Info
   requesterName: string;
