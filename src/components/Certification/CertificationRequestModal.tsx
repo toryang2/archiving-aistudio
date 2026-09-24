@@ -119,7 +119,7 @@ export const CertificationRequestModal: React.FC<CertificationRequestModalProps>
 
   // Certification Type & Status
   const [certificationType, setCertificationType] = useState<CertificationRequest['certificationType']>(
-    certificationToEdit?.certificationType || 'Certified True Copy of Tax Declaration'
+    certificationToEdit?.certificationType || 'Record Verification Data Form'
   );
   const [status, setStatus] = useState<CertificationRequest['status']>(certificationToEdit?.status || 'Issued');
   const [remarks, setRemarks] = useState<string>(certificationToEdit?.remarks || '');
@@ -837,6 +837,7 @@ export const CertificationRequestModal: React.FC<CertificationRequestModalProps>
                   onChange={(e) => setCertificationType(e.target.value as CertificationRequest['certificationType'])}
                   className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-hidden focus:border-blue-500 font-medium"
                 >
+                  <option value="Record Verification Data Form">Record Verification Data Form (Continuous Chain / Trace)</option>
                   <option value="Certified True Copy of Tax Declaration">Certified True Copy of Tax Declaration</option>
                   <option value="Certificate of Tax Declaration">Certificate of Tax Declaration (Holding)</option>
                   <option value="Certificate of Property Assessment">Certificate of Property Assessment</option>

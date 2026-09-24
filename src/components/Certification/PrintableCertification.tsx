@@ -544,7 +544,7 @@ export const PrintableCertification: React.FC<PrintableCertificationProps> = ({
         </div>
 
         {/* 3 Official Signatories: Prepared by, Verified and checked by, Approved by / Certified correct */}
-        <div className="grid grid-cols-3 gap-3 sm:gap-6 mb-6 font-sans">
+        <div className="grid grid-cols-3 gap-3 sm:gap-6 mb-5 font-sans">
           {/* Signatory 1: Prepared by */}
           <div className="flex flex-col justify-end">
             <span className="text-[10px] sm:text-[11px] text-slate-700 font-semibold block mb-6 sm:mb-8">
@@ -591,7 +591,7 @@ export const PrintableCertification: React.FC<PrintableCertificationProps> = ({
           </div>
         </div>
 
-        {/* OFFICIAL RECEIPT PARTICULARS BOX (AUDIT TRAIL) */}
+        {/* OFFICIAL RECEIPT PARTICULARS BOX (AUDIT TRAIL) WITH SUBTLE LEFT DRY SEAL SLOT */}
         <div className="w-full border-2 border-slate-900 rounded-xs p-2.5 bg-slate-50/50 font-sans text-xs">
           <div className="flex items-center justify-between border-b border-slate-400 pb-1 mb-1.5">
             <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-slate-900 text-[9.5px]">
@@ -601,43 +601,55 @@ export const PrintableCertification: React.FC<PrintableCertificationProps> = ({
             <span className="text-[9px] font-mono text-slate-600">Form No. RPT-CERT-2026</span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-1.5 gap-x-3 text-[10px] sm:text-[11px]">
-            <div>
-              <span className="text-slate-600 block text-[9px] uppercase font-semibold">Receipt # (O.R. No.):</span>
-              <span className="font-mono font-bold text-blue-950 text-[11px]">{certification.receiptNumber}</span>
+          <div className="flex flex-row items-center gap-3">
+            {/* Subtle Left-Side Dry Seal / Stamp Placement Slot */}
+            <div className="w-28 sm:w-32 shrink-0 flex flex-col items-center justify-center p-2 border border-dashed border-slate-300 rounded-xs bg-white/40 print:bg-transparent text-center self-stretch">
+              <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-full border border-dashed border-slate-300 print:border-slate-400 flex flex-col items-center justify-center text-slate-400 p-1">
+                <span className="text-[7.5px] uppercase font-bold tracking-wider text-slate-500 leading-none">Dry Seal</span>
+                <span className="text-[6.5px] text-slate-400 leading-tight mt-0.5">Area</span>
+              </div>
+              <span className="text-[6.5px] text-slate-400 uppercase tracking-tight mt-1 leading-none font-medium">Affix Seal & DST</span>
             </div>
 
-            <div>
-              <span className="text-slate-600 block text-[9px] uppercase font-semibold">Amount Paid:</span>
-              <span className="font-mono font-bold text-slate-950 text-[11px]">
-                {settings.currencySymbol}{certification.amount.toFixed(2)}
-              </span>
-            </div>
+            {/* Receipt Details Grid */}
+            <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 gap-y-1.5 gap-x-3 text-[10px] sm:text-[11px]">
+              <div>
+                <span className="text-slate-600 block text-[9px] uppercase font-semibold">Receipt # (O.R. No.):</span>
+                <span className="font-mono font-bold text-blue-950 text-[11px]">{certification.receiptNumber}</span>
+              </div>
 
-            <div>
-              <span className="text-slate-600 block text-[9px] uppercase font-semibold">Date Issued:</span>
-              <span className="font-semibold text-slate-900">{formatDate(certification.dateIssued)}</span>
-            </div>
+              <div>
+                <span className="text-slate-600 block text-[9px] uppercase font-semibold">Amount Paid:</span>
+                <span className="font-mono font-bold text-slate-950 text-[11px]">
+                  {settings.currencySymbol}{certification.amount.toFixed(2)}
+                </span>
+              </div>
 
-            <div className="sm:col-span-2">
-              <span className="text-slate-600 block text-[9px] uppercase font-semibold">Place Issued:</span>
-              <span className="font-medium text-slate-900 break-words">{certification.placeIssued}</span>
-            </div>
+              <div>
+                <span className="text-slate-600 block text-[9px] uppercase font-semibold">Date Issued:</span>
+                <span className="font-semibold text-slate-900">{formatDate(certification.dateIssued)}</span>
+              </div>
 
-            <div>
-              <span className="text-slate-600 block text-[9px] uppercase font-semibold">Prepared By:</span>
-              <span className="font-semibold text-slate-900 break-words">{certification.preparedBy}</span>
-            </div>
+              <div className="sm:col-span-2">
+                <span className="text-slate-600 block text-[9px] uppercase font-semibold">Place Issued:</span>
+                <span className="font-medium text-slate-900 break-words">{certification.placeIssued}</span>
+              </div>
 
-            <div className="col-span-2 sm:col-span-3 border-t border-dashed border-slate-300 pt-1 mt-0.5">
-              <span className="text-slate-600 block text-[9px] uppercase font-semibold">Purpose:</span>
-              <span className="font-semibold text-slate-950 break-words">{certification.purpose}</span>
+              <div>
+                <span className="text-slate-600 block text-[9px] uppercase font-semibold">Prepared By:</span>
+                <span className="font-semibold text-slate-900 break-words">{certification.preparedBy}</span>
+              </div>
+
+              <div className="col-span-2 sm:col-span-3 border-t border-dashed border-slate-300 pt-1 mt-0.5">
+                <span className="text-slate-600 block text-[9px] uppercase font-semibold">Purpose:</span>
+                <span className="font-semibold text-slate-950 break-words">{certification.purpose}</span>
+              </div>
             </div>
           </div>
 
           <div className="mt-1.5 pt-1 border-t border-slate-300 flex flex-col sm:flex-row items-center justify-between text-[8px] sm:text-[8.5px] text-slate-600 font-mono">
+            <span className="font-bold text-slate-800">★ VALID ONLY WITH EMBOSSED DRY SEAL ★</span>
             <span>Doc. Stamp Tax: PAID & AFFIXED</span>
-            <span className="font-bold text-slate-800">★ VALID ONLY WITH OFFICIAL RAISED DRY SEAL ★</span>
             <span>Ref ID: {certification.id}</span>
           </div>
         </div>

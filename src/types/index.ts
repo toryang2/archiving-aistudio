@@ -200,6 +200,7 @@ export interface CertificationRequest {
   
   // Certification Type & Status
   certificationType: 
+    | 'Record Verification Data Form'
     | 'Certified True Copy of Tax Declaration'
     | 'Certificate of Tax Declaration'
     | 'Certificate of Property Assessment'
