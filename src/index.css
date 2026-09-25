@@ -61,6 +61,16 @@
     overflow-wrap: break-word !important;
     overflow: hidden !important;
   }
+
+  .print-break-after {
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+
+  .print-avoid-break {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
 }
 
 /* Custom subtle scrollbar */

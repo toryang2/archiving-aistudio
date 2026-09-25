@@ -35,7 +35,7 @@ const MainLayout: React.FC = () => {
   const [certModalTd, setCertModalTd] = useState<TaxDeclaration | null>(null);
   const [editingCert, setEditingCert] = useState<CertificationRequest | null>(null);
   const [isPrintCertOpen, setIsPrintCertOpen] = useState(false);
-  const [printingCert, setPrintingCert] = useState<CertificationRequest | null>(null);
+  const [printingCerts, setPrintingCerts] = useState<CertificationRequest[]>([]);
 
   // Handlers for modal actions
   const handleOpenNewProperty = () => {
@@ -71,7 +71,12 @@ const MainLayout: React.FC = () => {
   };
 
   const handleOpenPrintCertification = (cert: CertificationRequest) => {
-    setPrintingCert(cert);
+    setPrintingCerts([cert]);
+    setIsPrintCertOpen(true);
+  };
+
+  const handleOpenBulkPrintCertifications = (certs: CertificationRequest[]) => {
+    setPrintingCerts(certs);
     setIsPrintCertOpen(true);
   };
 
@@ -104,10 +109,13 @@ const MainLayout: React.FC = () => {
               property={printingProperty}
               onBack={() => setIsPrintViewOpen(false)}
             />
-          ) : isPrintCertOpen && printingCert ? (
+          ) : isPrintCertOpen && printingCerts.length > 0 ? (
             <PrintableCertification
-              certification={printingCert}
-              onBack={() => setIsPrintCertOpen(false)}
+              certifications={printingCerts}
+              onBack={() => {
+                setIsPrintCertOpen(false);
+                setPrintingCerts([]);
+              }}
             />
           ) : (
             <>
@@ -133,6 +141,7 @@ const MainLayout: React.FC = () => {
                   onOpenNewModal={() => handleOpenNewCertification()}
                   onEditCert={handleOpenEditCertification}
                   onPrintCert={handleOpenPrintCertification}
+                  onBulkPrint={handleOpenBulkPrintCertifications}
                 />
               )}
 
