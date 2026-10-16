@@ -33,6 +33,7 @@ interface PropertyDetailModalProps {
   onOpenSupersedeModal: (property: TaxDeclaration) => void;
   onOpenPrintView: (property: TaxDeclaration) => void;
   onOpenCertificationRequest?: (property: TaxDeclaration) => void;
+  onOpenRecordVerificationForm?: (property: TaxDeclaration) => void;
 }
 
 export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
@@ -42,6 +43,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
   onOpenSupersedeModal,
   onOpenPrintView,
   onOpenCertificationRequest,
+  onOpenRecordVerificationForm,
 }) => {
   const { 
     settings, 
@@ -674,6 +676,17 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
                 >
                   <FileCheck className="w-3.5 h-3.5 text-blue-700" />
                   <span>Request Certification</span>
+                </button>
+              )}
+              {onOpenRecordVerificationForm && (
+                <button
+                  id="modal-verification-form-btn"
+                  onClick={() => onOpenRecordVerificationForm(property)}
+                  className="px-3.5 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-xl border border-emerald-200 transition-colors flex items-center gap-1.5 cursor-pointer"
+                  title="Generate Record Verification Data Form (Non-Certificate, no receipt particulars)"
+                >
+                  <FileText className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>Verification Form</span>
                 </button>
               )}
             </div>

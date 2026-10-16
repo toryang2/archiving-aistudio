@@ -36,6 +36,7 @@ const MainLayout: React.FC = () => {
   const [editingCert, setEditingCert] = useState<CertificationRequest | null>(null);
   const [isPrintCertOpen, setIsPrintCertOpen] = useState(false);
   const [printingCerts, setPrintingCerts] = useState<CertificationRequest[]>([]);
+  const [certDocumentMode, setCertDocumentMode] = useState<'certification' | 'verification'>('certification');
 
   // Handlers for modal actions
   const handleOpenNewProperty = () => {
@@ -70,13 +71,64 @@ const MainLayout: React.FC = () => {
     setIsCertModalOpen(true);
   };
 
-  const handleOpenPrintCertification = (cert: CertificationRequest) => {
+  const handleOpenPrintCertification = (cert: CertificationRequest, docMode: 'certification' | 'verification' = 'certification') => {
     setPrintingCerts([cert]);
+    setCertDocumentMode(docMode);
     setIsPrintCertOpen(true);
   };
 
-  const handleOpenBulkPrintCertifications = (certs: CertificationRequest[]) => {
+  const handleOpenBulkPrintCertifications = (certs: CertificationRequest[], docMode: 'certification' | 'verification' = 'certification') => {
     setPrintingCerts(certs);
+    setCertDocumentMode(docMode);
+    setIsPrintCertOpen(true);
+  };
+
+  // Direct generation of Record Verification Data Form (Non-Certificate) for any property
+  const handleOpenRecordVerificationForm = (property: TaxDeclaration) => {
+    const ownerName = `${property.lastName ? `${property.lastName}, ` : ''}${property.firstName} ${property.middleName || ''}`.trim();
+    const synthesizedCert: CertificationRequest = {
+      id: `VRF-${property.tdNumber.replace(/[^a-zA-Z0-9]/g, '')}`,
+      certNumber: `VRF-2026-${property.tdNumber.slice(-4) || '0001'}`,
+      taxDeclarationId: property.id,
+      tdNumber: property.tdNumber,
+      pin: property.pin,
+      ownerName: ownerName,
+      propertyLocation: `${property.barangayName}, ${property.municipalityName}, ${property.provinceName}`,
+      titleNumber: property.titleNumber,
+      lotNumber: property.lotNumber,
+      surveyNumber: property.surveyNumber,
+      area: property.area,
+      areaUnit: property.areaUnit,
+      assessedValue: property.assessedValue,
+      marketValue: property.marketValue,
+      kindOfProperty: property.kindOfProperty,
+      generalClass: property.generalClass,
+      propertyState: property.propertyState,
+      adminBusinessName: property.adminBusinessName,
+      assessmentDate: property.assessmentDate,
+      effectivityDate: `${property.effectivityQuarter ? `Q${property.effectivityQuarter} ` : ''}${property.effectivityYear}`,
+      ownerAddress: property.address,
+      requesterName: ownerName || 'Assessor Archive Inquirer',
+      requesterRelation: 'Declared Owner / Record Inquirer',
+      receiptNumber: 'N/A (NON-CERTIFICATE)',
+      amount: 0,
+      dateIssued: new Date().toISOString().split('T')[0],
+      placeIssued: `Office of the Municipal Assessor, ${property.municipalityName}`,
+      purpose: 'Assessment Record Verification & Lineage Tracing',
+      preparedBy: 'Assessment Records Staff',
+      preparedByTitle: 'Assessment Records Section',
+      verifiedBy: 'ENGR. RAMON S. VALDEZ',
+      verifiedByTitle: 'Local Assessment Operations Officer II',
+      approvedBy: 'ENGR. MARIO T. SANTOS',
+      approvedByTitle: 'Municipal Assessor',
+      approvalLabel: 'Certified correct as to available record/s:',
+      certificationType: 'Record Verification Data Form',
+      status: 'Issued',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setPrintingCerts([synthesizedCert]);
+    setCertDocumentMode('verification');
     setIsPrintCertOpen(true);
   };
 
@@ -112,6 +164,7 @@ const MainLayout: React.FC = () => {
           ) : isPrintCertOpen && printingCerts.length > 0 ? (
             <PrintableCertification
               certifications={printingCerts}
+              initialDocumentMode={certDocumentMode}
               onBack={() => {
                 setIsPrintCertOpen(false);
                 setPrintingCerts([]);
@@ -133,6 +186,7 @@ const MainLayout: React.FC = () => {
                   onOpenSupersedeModal={handleOpenSupersede}
                   onOpenPrintView={handleOpenPrint}
                   onOpenCertificationRequest={handleOpenNewCertification}
+                  onOpenRecordVerificationForm={handleOpenRecordVerificationForm}
                 />
               )}
 
@@ -190,6 +244,10 @@ const MainLayout: React.FC = () => {
         onOpenCertificationRequest={(prop) => {
           setSelectedProperty(null);
           handleOpenNewCertification(prop);
+        }}
+        onOpenRecordVerificationForm={(prop) => {
+          setSelectedProperty(null);
+          handleOpenRecordVerificationForm(prop);
         }}
       />
 

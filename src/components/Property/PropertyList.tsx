@@ -32,6 +32,7 @@ interface PropertyListProps {
   onOpenSupersedeModal: (property: TaxDeclaration) => void;
   onOpenPrintView: (property: TaxDeclaration) => void;
   onOpenCertificationRequest?: (property: TaxDeclaration) => void;
+  onOpenRecordVerificationForm?: (property: TaxDeclaration) => void;
 }
 
 export const PropertyList: React.FC<PropertyListProps> = ({
@@ -40,6 +41,7 @@ export const PropertyList: React.FC<PropertyListProps> = ({
   onOpenSupersedeModal,
   onOpenPrintView,
   onOpenCertificationRequest,
+  onOpenRecordVerificationForm,
 }) => {
   const { 
     taxDeclarations, 
@@ -524,6 +526,15 @@ export const PropertyList: React.FC<PropertyListProps> = ({
                           <FileCheck className="w-3.5 h-3.5" />
                         </button>
                       )}
+                      {onOpenRecordVerificationForm && (
+                        <button
+                          onClick={() => onOpenRecordVerificationForm(td)}
+                          title="Print Record Verification Data Form (Non-Certificate, no receipt particulars)"
+                          className="p-1.5 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors cursor-pointer"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                       <button
                         onClick={() => {
                           if (window.confirm(`Are you sure you want to permanently delete Tax Declaration ${td.tdNumber}?`)) {
@@ -796,6 +807,17 @@ export const PropertyList: React.FC<PropertyListProps> = ({
                                 className="p-1.5 text-slate-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
                               >
                                 <FileCheck className="w-4 h-4" />
+                              </button>
+                            )}
+
+                            {onOpenRecordVerificationForm && (
+                              <button
+                                id={`verify-td-${td.id}`}
+                                onClick={() => onOpenRecordVerificationForm(td)}
+                                title="Print Record Verification Data Form (Non-Certificate, no receipt particulars)"
+                                className="p-1.5 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
+                              >
+                                <FileText className="w-4 h-4" />
                               </button>
                             )}
 

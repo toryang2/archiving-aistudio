@@ -33,8 +33,8 @@ import { CertificationRequest } from '../../types';
 interface CertificationsViewProps {
   onOpenNewModal: () => void;
   onEditCert: (cert: CertificationRequest) => void;
-  onPrintCert: (cert: CertificationRequest) => void;
-  onBulkPrint?: (certs: CertificationRequest[]) => void;
+  onPrintCert: (cert: CertificationRequest, docType?: 'certification' | 'verification') => void;
+  onBulkPrint?: (certs: CertificationRequest[], docType?: 'certification' | 'verification') => void;
 }
 
 export const CertificationsView: React.FC<CertificationsViewProps> = ({
@@ -168,12 +168,12 @@ export const CertificationsView: React.FC<CertificationsViewProps> = ({
   };
 
   // Bulk print handler
-  const handleBulkPrint = () => {
+  const handleBulkPrint = (docType: 'certification' | 'verification' = 'certification') => {
     if (selectedCertifications.length === 0) return;
     if (onBulkPrint) {
-      onBulkPrint(selectedCertifications);
+      onBulkPrint(selectedCertifications, docType);
     } else {
-      onPrintCert(selectedCertifications[0]);
+      onPrintCert(selectedCertifications[0], docType);
     }
   };
 
@@ -201,20 +201,32 @@ export const CertificationsView: React.FC<CertificationsViewProps> = ({
             <h1 className="text-xl sm:text-2xl font-black tracking-tight">Tax Declaration Certification Requests</h1>
           </div>
           <p className="text-xs sm:text-sm text-blue-200/90 max-w-2xl">
-            Manage, issue, audit, and bulk print official certifications for tax declarations with recorded official receipt numbers, fees, purpose, and preparing officer logs.
+            Manage, issue, audit, and bulk print official certifications and non-certificate record verification data forms with full lineage, parcel QR verification, and preparing officer logs.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 self-stretch md:self-auto">
+        <div className="flex flex-wrap items-center gap-2 self-stretch md:self-auto">
           {selectedCertIds.size > 0 && (
-            <button
-              id="header-bulk-print-btn"
-              onClick={handleBulkPrint}
-              className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer flex-1 md:flex-initial justify-center"
-            >
-              <Printer className="w-4 h-4" />
-              <span>Bulk Print ({selectedCertIds.size})</span>
-            </button>
+            <>
+              <button
+                id="header-bulk-print-btn"
+                onClick={() => handleBulkPrint('certification')}
+                title="Bulk print selected records as Official Certifications (With O.R. particulars and dry seal area)"
+                className="px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-1.5 cursor-pointer flex-1 md:flex-initial justify-center"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Bulk Certs ({selectedCertIds.size})</span>
+              </button>
+              <button
+                id="header-bulk-verification-btn"
+                onClick={() => handleBulkPrint('verification')}
+                title="Bulk print selected records as Record Verification Data Forms (Non-Certificate, no receipt particulars)"
+                className="px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-1.5 cursor-pointer flex-1 md:flex-initial justify-center"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Bulk Verification ({selectedCertIds.size})</span>
+              </button>
+            </>
           )}
 
           <button
@@ -424,20 +436,40 @@ export const CertificationsView: React.FC<CertificationsViewProps> = ({
               type="button"
               id="table-header-bulk-print-btn"
               disabled={selectedCertIds.size === 0}
-              onClick={handleBulkPrint}
+              onClick={() => handleBulkPrint('certification')}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
                 selectedCertIds.size > 0
-                  ? 'bg-blue-700 text-white hover:bg-blue-800 shadow-sm cursor-pointer'
+                  ? 'bg-blue-700 text-white hover:bg-blue-800 shadow-xs cursor-pointer'
                   : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
               }`}
               title={
                 selectedCertIds.size > 0
-                  ? `Open combined print view for ${selectedCertIds.size} certificates`
+                  ? `Open combined print view as Official Certifications for ${selectedCertIds.size} records`
                   : 'Select one or more certifications using checkboxes to bulk print'
               }
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>Bulk Print {selectedCertIds.size > 0 ? `(${selectedCertIds.size})` : ''}</span>
+              <span>Bulk Print Certs {selectedCertIds.size > 0 ? `(${selectedCertIds.size})` : ''}</span>
+            </button>
+
+            <button
+              type="button"
+              id="table-header-bulk-verification-btn"
+              disabled={selectedCertIds.size === 0}
+              onClick={() => handleBulkPrint('verification')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+                selectedCertIds.size > 0
+                  ? 'bg-emerald-700 text-white hover:bg-emerald-800 shadow-xs cursor-pointer'
+                  : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+              }`}
+              title={
+                selectedCertIds.size > 0
+                  ? `Open combined print view as Record Verification Data Forms (Non-Certificate) for ${selectedCertIds.size} records`
+                  : 'Select one or more certifications using checkboxes to bulk print'
+              }
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Bulk Verification {selectedCertIds.size > 0 ? `(${selectedCertIds.size})` : ''}</span>
             </button>
           </div>
         </div>
@@ -598,14 +630,24 @@ export const CertificationsView: React.FC<CertificationsViewProps> = ({
                             <QrCode className="w-3.5 h-3.5" />
                           </button>
 
-                          {/* Print Button */}
+                          {/* Print Official Certificate Button */}
                           <button
                             id={`print-cert-${cert.id}`}
-                            onClick={() => onPrintCert(cert)}
-                            title="Print Official Certificate"
+                            onClick={() => onPrintCert(cert, 'certification')}
+                            title="Print Official Certificate (With O.R. & Dry Seal Area)"
                             className="p-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-700 hover:text-white transition-colors cursor-pointer"
                           >
                             <Printer className="w-3.5 h-3.5" />
+                          </button>
+
+                          {/* Print Record Verification Data Form Button */}
+                          <button
+                            id={`verify-form-${cert.id}`}
+                            onClick={() => onPrintCert(cert, 'verification')}
+                            title="Print Record Verification Data Form (Non-Certificate, no receipt particulars)"
+                            className="p-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-700 hover:text-white transition-colors cursor-pointer"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
                           </button>
 
                           {/* Edit Button */}

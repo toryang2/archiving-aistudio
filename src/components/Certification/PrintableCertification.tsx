@@ -30,12 +30,15 @@ export interface QrScanModalData {
   receiptNumber: string;
 }
 
+export type CertificationDocumentMode = 'certification' | 'verification';
+
 interface SingleCertificationSheetProps {
   certification: CertificationRequest;
   paperWidthClass: string;
   index: number;
   total: number;
   isLast: boolean;
+  documentMode: CertificationDocumentMode;
   onOpenScanModal?: (data: QrScanModalData) => void;
 }
 
@@ -45,6 +48,7 @@ const SingleCertificationSheet: React.FC<SingleCertificationSheetProps> = ({
   index,
   total,
   isLast,
+  documentMode,
   onOpenScanModal,
 }) => {
   const { settings, taxDeclarations, getPropertyLineage } = useApp();
@@ -145,7 +149,8 @@ TD NUMBER: ${headerTdNumber}
 CONTROL NO: ${certification.certNumber}
 PIN: ${headerPin}
 DECLARED OWNER: ${headerOwner}
-O.R. NUMBER: ${certification.receiptNumber}
+${documentMode === 'certification' ? `O.R. NUMBER: ${certification.receiptNumber}
+AMOUNT: ${settings.currencySymbol}${certification.amount.toFixed(2)}` : 'FORM: RECORD VERIFICATION DATA FORM (NON-CERTIFICATE)'}
 DATE ISSUED: ${certification.dateIssued}
 MUNICIPALITY: ${settings.psgcMunicipalityName || settings.lguName}, ${settings.provinceName}
 STATUS: OFFICIAL RECORD ARCHIVE VERIFIED`;
@@ -168,11 +173,18 @@ STATUS: OFFICIAL RECORD ARCHIVE VERIFIED`;
             <span className="font-semibold text-slate-800">
               Control: <span className="font-mono text-blue-950">{certification.certNumber}</span>
             </span>
+            <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">
+              {documentMode === 'certification' ? 'Official Certification' : 'Record Verification Data Form'}
+            </span>
           </div>
           <div className="flex items-center gap-3 text-[11px]">
-            <span className="font-mono text-slate-600 font-medium">O.R. #{certification.receiptNumber}</span>
-            <span className="font-bold text-slate-800">{settings.currencySymbol}{certification.amount.toFixed(2)}</span>
-            <span className="text-slate-300">|</span>
+            {documentMode === 'certification' && (
+              <>
+                <span className="font-mono text-slate-600 font-medium">O.R. #{certification.receiptNumber}</span>
+                <span className="font-bold text-slate-800">{settings.currencySymbol}{certification.amount.toFixed(2)}</span>
+                <span className="text-slate-300">|</span>
+              </>
+            )}
             <span className="text-slate-700 font-medium truncate max-w-[200px]">{certification.ownerName}</span>
           </div>
         </div>
@@ -204,22 +216,50 @@ STATUS: OFFICIAL RECORD ARCHIVE VERIFIED`;
         </p>
 
         <div className="absolute right-0 top-0 text-right font-sans">
-          <span className="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">Control No.</span>
+          <span className="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">
+            {documentMode === 'certification' ? 'Control No.' : 'Form Ref No.'}
+          </span>
           <span className="font-mono font-bold text-xs sm:text-sm text-blue-900">{certification.certNumber}</span>
         </div>
       </div>
 
-      {/* Title */}
+      {/* Dynamic Title based on documentMode */}
       <div className="text-center mb-4">
-        <h2 className="text-xl sm:text-2xl font-black uppercase tracking-widest text-slate-950 underline decoration-2 underline-offset-4">
-          RECORD VERIFICATION DATA FORM
-        </h2>
-        {certification.certificationType && (
-          <p className="text-[11px] font-sans text-slate-600 uppercase tracking-widest mt-1 font-semibold">
-            ({certification.certificationType.toUpperCase()})
-          </p>
+        {documentMode === 'certification' ? (
+          <>
+            <h2 className="text-xl sm:text-2xl font-black uppercase tracking-widest text-slate-950 underline decoration-2 underline-offset-4">
+              CERTIFICATION
+            </h2>
+            <p className="text-[11px] font-sans text-slate-600 uppercase tracking-widest mt-1 font-semibold">
+              ({certification.certificationType?.toUpperCase() || 'TAX DECLARATION LINEAGE & PROPERTY ASSESSMENT'})
+            </p>
+          </>
+        ) : (
+          <>
+            <h2 className="text-xl sm:text-2xl font-black uppercase tracking-widest text-slate-950 underline decoration-2 underline-offset-4">
+              RECORD VERIFICATION DATA FORM
+            </h2>
+            <p className="text-[10px] sm:text-[11px] font-sans text-slate-600 uppercase tracking-widest mt-1 font-semibold">
+              (NON-CERTIFICATE ASSESSMENT RECORD VERIFICATION)
+            </p>
+          </>
         )}
       </div>
+
+      {/* Preamble / Scope Note */}
+      {documentMode === 'certification' ? (
+        <div className="mb-4 text-[11px] sm:text-xs font-serif leading-relaxed text-slate-900">
+          <p className="indent-8 text-justify">
+            <span className="font-bold uppercase tracking-wider">TO WHOM IT MAY CONCERN:</span> THIS IS TO CERTIFY that according to available records and archive files in the Office of the Municipal Assessor, the real property declared under the name of <strong className="font-bold uppercase text-slate-950 underline decoration-1 underline-offset-2">{headerOwner}</strong> has the following property assessment records, identification, and continuous chain of tax declarations:
+          </p>
+        </div>
+      ) : (
+        <div className="mb-4 text-[10.5px] sm:text-[11px] font-sans leading-snug text-slate-800 bg-slate-50 border border-slate-200 p-2.5 rounded-xs">
+          <p>
+            <strong className="font-bold text-slate-950 uppercase tracking-wide">RECORD INQUIRY SCOPE:</strong> This Record Verification Data Form provides the verified property assessment data and chronological tax declaration lineage on file in this Office. As an administrative non-certificate reference form, no official receipt payment or dry seal is required.
+          </p>
+        </div>
+      )}
 
       {/* Exact Header Information Card */}
       <div className="w-full border-2 border-slate-900 mb-5 font-sans text-xs bg-white">
@@ -533,112 +573,177 @@ STATUS: OFFICIAL RECORD ARCHIVE VERIFIED`;
         </div>
       </div>
 
-      {/* OFFICIAL RECEIPT PARTICULARS BOX (AUDIT TRAIL) WITH SUBTLE LEFT DRY SEAL SLOT */}
-      <div className="w-full border-2 border-slate-900 rounded-xs p-2.5 bg-slate-50/50 font-sans text-xs">
-        <div className="flex items-center justify-between border-b border-slate-400 pb-1 mb-1.5">
-          <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-slate-900 text-[9.5px]">
-            <Receipt className="w-3 h-3 text-blue-900 shrink-0" />
-            <span>OFFICIAL RECEIPT PARTICULARS (LOCAL GOVERNMENT AUDIT TRAIL)</span>
+      {/* CONDITIONAL BOTTOM SECTION: Official Receipt Box for Certification vs Record Verification Panel for Verification Form */}
+      {documentMode === 'certification' ? (
+        /* OFFICIAL RECEIPT PARTICULARS BOX (AUDIT TRAIL) WITH SUBTLE LEFT DRY SEAL SLOT */
+        <div className="w-full border-2 border-slate-900 rounded-xs p-2.5 bg-slate-50/50 font-sans text-xs">
+          <div className="flex items-center justify-between border-b border-slate-400 pb-1 mb-1.5">
+            <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-slate-900 text-[9.5px]">
+              <Receipt className="w-3 h-3 text-blue-900 shrink-0" />
+              <span>OFFICIAL RECEIPT PARTICULARS (LOCAL GOVERNMENT AUDIT TRAIL)</span>
+            </div>
+            <span className="text-[9px] font-mono text-slate-600">Form No. RPT-CERT-2026</span>
           </div>
-          <span className="text-[9px] font-mono text-slate-600">Form No. RPT-CERT-2026</span>
+
+          <div className="flex flex-row items-center gap-2.5 sm:gap-3">
+            {/* Subtle Left-Side Dry Seal / Stamp Placement Slot */}
+            <div className="w-24 sm:w-28 shrink-0 flex flex-col items-center justify-center p-1.5 border border-dashed border-slate-300 rounded-xs bg-white/40 print:bg-transparent text-center self-stretch">
+              <div className="w-15 h-15 sm:w-16 sm:h-16 rounded-full border border-dashed border-slate-300 print:border-slate-400 flex flex-col items-center justify-center text-slate-400 p-1">
+                <span className="text-[7.5px] uppercase font-bold tracking-wider text-slate-500 leading-none">Dry Seal</span>
+                <span className="text-[6.5px] text-slate-400 leading-tight mt-0.5">Area</span>
+              </div>
+              <span className="text-[6.5px] text-slate-400 uppercase tracking-tight mt-1 leading-none font-medium">Affix Seal & DST</span>
+            </div>
+
+            {/* Receipt Details Grid */}
+            <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 gap-y-1 gap-x-2.5 text-[9.5px] sm:text-[10px]">
+              <div>
+                <span className="text-slate-600 block text-[8.5px] sm:text-[9px] uppercase font-semibold">Receipt # (O.R. No.):</span>
+                <span className="font-mono font-bold text-blue-950 text-[10.5px] sm:text-[11px]">{certification.receiptNumber}</span>
+              </div>
+
+              <div>
+                <span className="text-slate-600 block text-[8.5px] sm:text-[9px] uppercase font-semibold">Amount Paid:</span>
+                <span className="font-mono font-bold text-slate-950 text-[10.5px] sm:text-[11px]">
+                  {settings.currencySymbol}{certification.amount.toFixed(2)}
+                </span>
+              </div>
+
+              <div>
+                <span className="text-slate-600 block text-[8.5px] sm:text-[9px] uppercase font-semibold">Date Issued:</span>
+                <span className="font-semibold text-slate-900">{formatDate(certification.dateIssued)}</span>
+              </div>
+
+              <div className="sm:col-span-2">
+                <span className="text-slate-600 block text-[8.5px] sm:text-[9px] uppercase font-semibold">Place Issued:</span>
+                <span className="font-medium text-slate-900 break-words">{certification.placeIssued}</span>
+              </div>
+
+              <div>
+                <span className="text-slate-600 block text-[8.5px] sm:text-[9px] uppercase font-semibold">Prepared By:</span>
+                <span className="font-semibold text-slate-900 break-words">{certification.preparedBy}</span>
+              </div>
+
+              <div className="col-span-2 sm:col-span-3 border-t border-dashed border-slate-300 pt-1 mt-0.5">
+                <span className="text-slate-600 block text-[8.5px] sm:text-[9px] uppercase font-semibold">Purpose:</span>
+                <span className="font-semibold text-slate-950 break-words">{certification.purpose}</span>
+              </div>
+            </div>
+
+            {/* OFFICIAL QR VERIFICATION BASE - Exact 72x72 Square QR */}
+            <div
+              onClick={() => onOpenScanModal?.({
+                lotNumber: resolvedLotNumber,
+                refId: resolvedRefId,
+                qrText: qrScannedData,
+                certNumber: certification.certNumber,
+                tdNumber: headerTdNumber,
+                ownerName: headerOwner,
+                receiptNumber: certification.receiptNumber,
+              })}
+              className="shrink-0 w-[72px] h-[72px] bg-white flex items-center justify-center cursor-pointer print:cursor-default"
+              title="Click to preview scanned QR data"
+            >
+              <QRCodeSVG
+                value={qrScannedData}
+                size={72}
+                level="M"
+                includeMargin={false}
+                className="block"
+              />
+            </div>
+          </div>
+
+          {/* Official verification strip - Clean line with Lot & Ref ID without redundant QR Base text or icon */}
+          <div className="mt-1.5 pt-1 border-t border-slate-300 flex flex-col sm:flex-row items-center justify-between text-[8px] sm:text-[8.5px] text-slate-600 font-mono">
+            <span className="font-bold text-slate-800">★ VALID ONLY WITH EMBOSSED DRY SEAL ★</span>
+            <span>Doc. Stamp Tax: PAID & AFFIXED</span>
+            <button
+              type="button"
+              onClick={() => onOpenScanModal?.({
+                lotNumber: resolvedLotNumber,
+                refId: resolvedRefId,
+                qrText: qrScannedData,
+                certNumber: certification.certNumber,
+                tdNumber: headerTdNumber,
+                ownerName: headerOwner,
+                receiptNumber: certification.receiptNumber,
+              })}
+              className="text-slate-900 hover:text-blue-700 font-semibold transition-colors cursor-pointer print:cursor-default"
+              title="Click to preview QR code scan result"
+            >
+              <span>Lot: <strong className="font-black text-slate-950">{resolvedLotNumber}</strong> &bull; Ref ID: <strong className="font-mono font-bold text-blue-950">{resolvedRefId}</strong></span>
+            </button>
+          </div>
         </div>
+      ) : (
+        /* RECORD VERIFICATION DATA FORM - BOTTOM QR & ARCHIVE RECORD PANEL (NON-CERTIFICATE) */
+        <div className="w-full border-2 border-slate-900 rounded-xs p-3 bg-slate-50/70 font-sans text-xs">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            {/* Left: Administrative record verification details */}
+            <div className="flex-1 space-y-1.5 text-left">
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded-xs bg-slate-900 text-white font-bold text-[9px] uppercase tracking-wider">
+                  OFFICIAL RECORD VERIFICATION DATA
+                </span>
+                <span className="text-[9.5px] font-mono font-semibold text-slate-700">
+                  Form Ref: <span className="font-bold text-blue-950 font-mono">{resolvedRefId}</span>
+                </span>
+              </div>
+              
+              <p className="text-[10px] text-slate-700 leading-tight">
+                Verified Real Property Archive Data for <strong className="text-slate-950 font-bold uppercase">{headerOwner}</strong>. This record is synchronized with the municipal real property archives of <strong className="text-slate-900">{settings.psgcMunicipalityName || settings.lguName}, {settings.provinceName}</strong>.
+              </p>
 
-        <div className="flex flex-row items-center gap-2.5 sm:gap-3">
-          {/* Subtle Left-Side Dry Seal / Stamp Placement Slot */}
-          <div className="w-24 sm:w-28 shrink-0 flex flex-col items-center justify-center p-1.5 border border-dashed border-slate-300 rounded-xs bg-white/40 print:bg-transparent text-center self-stretch">
-            <div className="w-15 h-15 sm:w-16 sm:h-16 rounded-full border border-dashed border-slate-300 print:border-slate-400 flex flex-col items-center justify-center text-slate-400 p-1">
-              <span className="text-[7.5px] uppercase font-bold tracking-wider text-slate-500 leading-none">Dry Seal</span>
-              <span className="text-[6.5px] text-slate-400 leading-tight mt-0.5">Area</span>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[9px] font-mono text-slate-600 pt-1 border-t border-slate-300">
+                <span>LOT NO: <strong className="text-slate-950 font-bold">{resolvedLotNumber}</strong></span>
+                <span>&bull;</span>
+                <span>TD NO: <strong className="text-slate-950 font-bold">{headerTdNumber}</strong></span>
+                <span>&bull;</span>
+                <span>PIN: <strong className="text-slate-950 font-bold">{headerPin}</strong></span>
+                <span>&bull;</span>
+                <span>DATE: <strong className="text-slate-950 font-bold">{formatDate(certification.dateIssued)}</strong></span>
+                <span>&bull;</span>
+                <span className="text-emerald-700 font-bold">STATUS: ARCHIVE VERIFIED</span>
+              </div>
             </div>
-            <span className="text-[6.5px] text-slate-400 uppercase tracking-tight mt-1 leading-none font-medium">Affix Seal & DST</span>
-          </div>
 
-          {/* Receipt Details Grid */}
-          <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 gap-y-1 gap-x-2.5 text-[9.5px] sm:text-[10px]">
-            <div>
-              <span className="text-slate-600 block text-[8.5px] sm:text-[9px] uppercase font-semibold">Receipt # (O.R. No.):</span>
-              <span className="font-mono font-bold text-blue-950 text-[10.5px] sm:text-[11px]">{certification.receiptNumber}</span>
-            </div>
-
-            <div>
-              <span className="text-slate-600 block text-[8.5px] sm:text-[9px] uppercase font-semibold">Amount Paid:</span>
-              <span className="font-mono font-bold text-slate-950 text-[10.5px] sm:text-[11px]">
-                {settings.currencySymbol}{certification.amount.toFixed(2)}
+            {/* Right: Square QR Code - Scannable and clickable */}
+            <div className="shrink-0 flex flex-col items-center justify-center pl-2">
+              <div
+                onClick={() => onOpenScanModal?.({
+                  lotNumber: resolvedLotNumber,
+                  refId: resolvedRefId,
+                  qrText: qrScannedData,
+                  certNumber: certification.certNumber,
+                  tdNumber: headerTdNumber,
+                  ownerName: headerOwner,
+                  receiptNumber: 'N/A (NON-CERTIFICATE)',
+                })}
+                className="w-[72px] h-[72px] bg-white border border-slate-900 p-0.5 flex items-center justify-center cursor-pointer print:cursor-default shadow-xs"
+                title="Click to preview decoded QR verification data"
+              >
+                <QRCodeSVG
+                  value={qrScannedData}
+                  size={68}
+                  level="M"
+                  includeMargin={false}
+                  className="block"
+                />
+              </div>
+              <span className="text-[7.5px] font-mono text-slate-500 uppercase mt-1 tracking-tight text-center">
+                Scan to Verify
               </span>
             </div>
-
-            <div>
-              <span className="text-slate-600 block text-[8.5px] sm:text-[9px] uppercase font-semibold">Date Issued:</span>
-              <span className="font-semibold text-slate-900">{formatDate(certification.dateIssued)}</span>
-            </div>
-
-            <div className="sm:col-span-2">
-              <span className="text-slate-600 block text-[8.5px] sm:text-[9px] uppercase font-semibold">Place Issued:</span>
-              <span className="font-medium text-slate-900 break-words">{certification.placeIssued}</span>
-            </div>
-
-            <div>
-              <span className="text-slate-600 block text-[8.5px] sm:text-[9px] uppercase font-semibold">Prepared By:</span>
-              <span className="font-semibold text-slate-900 break-words">{certification.preparedBy}</span>
-            </div>
-
-            <div className="col-span-2 sm:col-span-3 border-t border-dashed border-slate-300 pt-1 mt-0.5">
-              <span className="text-slate-600 block text-[8.5px] sm:text-[9px] uppercase font-semibold">Purpose:</span>
-              <span className="font-semibold text-slate-950 break-words">{certification.purpose}</span>
-            </div>
-          </div>
-
-          {/* OFFICIAL QR VERIFICATION BASE - Flush Square QR */}
-          <div
-            onClick={() => onOpenScanModal?.({
-              lotNumber: resolvedLotNumber,
-              refId: resolvedRefId,
-              qrText: qrScannedData,
-              certNumber: certification.certNumber,
-              tdNumber: headerTdNumber,
-              ownerName: headerOwner,
-              receiptNumber: certification.receiptNumber,
-            })}
-            className="shrink-0 flex items-center justify-center p-1 bg-white cursor-pointer print:cursor-default"
-            title="Click to preview scanned QR data"
-          >
-            <QRCodeSVG
-              value={qrScannedData}
-              size={72}
-              level="M"
-              includeMargin={false}
-              className="block"
-            />
           </div>
         </div>
-
-        {/* Official verification strip: replaced plain Ref ID with interactive QR Base status */}
-        <div className="mt-1.5 pt-1 border-t border-slate-300 flex flex-col sm:flex-row items-center justify-between text-[8px] sm:text-[8.5px] text-slate-600 font-mono">
-          <span className="font-bold text-slate-800">★ VALID ONLY WITH EMBOSSED DRY SEAL ★</span>
-          <span>Doc. Stamp Tax: PAID & AFFIXED</span>
-          <button
-            type="button"
-            onClick={() => onOpenScanModal?.({
-              lotNumber: resolvedLotNumber,
-              refId: resolvedRefId,
-              qrText: qrScannedData,
-              certNumber: certification.certNumber,
-              tdNumber: headerTdNumber,
-              ownerName: headerOwner,
-              receiptNumber: certification.receiptNumber,
-            })}
-            className="flex items-center gap-1.5 text-slate-900 hover:text-blue-700 font-semibold transition-colors cursor-pointer print:cursor-default"
-            title="Click to preview QR code scan result"
-          >
-            <QrCode className="w-3 h-3 text-blue-900 print:text-slate-900" />
-            <span>QR Base: <strong className="font-black text-slate-950">Lot {resolvedLotNumber}</strong> &bull; Ref ID: <strong className="font-mono font-bold text-blue-950">{resolvedRefId}</strong></span>
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Bottom security notice */}
       <p className="text-[8.5px] font-sans text-center text-slate-400 mt-2.5 tracking-wider uppercase">
-        This document is generated by the Assessor Real Property Archive System. Any alteration or erasure invalidates this certificate.
+        {documentMode === 'certification'
+          ? 'This official certificate is generated by the Assessor Real Property Archive System. Any alteration or erasure invalidates this certificate.'
+          : 'This Record Verification Data Form is an administrative archive extract generated for inquiry and verification. Any alteration invalidates this record.'}
       </p>
     </div>
   );
@@ -647,16 +752,24 @@ STATUS: OFFICIAL RECORD ARCHIVE VERIFIED`;
 export interface PrintableCertificationProps {
   certification?: CertificationRequest;
   certifications?: CertificationRequest[];
+  initialDocumentMode?: CertificationDocumentMode;
   onBack: () => void;
 }
 
 export const PrintableCertification: React.FC<PrintableCertificationProps> = ({
   certification,
   certifications,
+  initialDocumentMode,
   onBack,
 }) => {
   const { settings } = useApp();
   const [paperSize, setPaperSize] = useState<'auto' | 'letter' | 'a4' | 'legal'>('auto');
+  const [documentMode, setDocumentMode] = useState<CertificationDocumentMode>(() => {
+    if (initialDocumentMode) return initialDocumentMode;
+    if (certification?.certificationType === 'Record Verification Data Form') return 'verification';
+    if (certifications && certifications.length === 1 && certifications[0].certificationType === 'Record Verification Data Form') return 'verification';
+    return 'certification';
+  });
   const [scanModalData, setScanModalData] = useState<QrScanModalData | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -701,7 +814,7 @@ export const PrintableCertification: React.FC<PrintableCertificationProps> = ({
     <div className="min-h-screen bg-slate-100 py-6 px-2 sm:px-4 print:p-0 print:bg-white print:m-0 w-full">
       
       {/* Non-printable Action Bar */}
-      <div className="max-w-4xl mx-auto mb-5 flex flex-wrap items-center justify-between gap-3 print:hidden bg-white p-3.5 rounded-xl shadow-xs border border-slate-200">
+      <div className="max-w-5xl mx-auto mb-5 flex flex-wrap items-center justify-between gap-3 print:hidden bg-white p-3.5 rounded-xl shadow-xs border border-slate-200">
         <div className="flex items-center gap-2">
           <button
             id="back-from-cert-print-btn"
@@ -734,6 +847,36 @@ export const PrintableCertification: React.FC<PrintableCertificationProps> = ({
               </select>
             </div>
           )}
+        </div>
+
+        {/* Document Type Switcher: Official Certification vs Record Verification Data Form */}
+        <div className="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs">
+          <button
+            type="button"
+            id="mode-certification-btn"
+            onClick={() => setDocumentMode('certification')}
+            className={`px-3 py-1 rounded text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              documentMode === 'certification'
+                ? 'bg-blue-700 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <FileCheck className="w-3.5 h-3.5" />
+            <span>Official Certification</span>
+          </button>
+          <button
+            type="button"
+            id="mode-verification-btn"
+            onClick={() => setDocumentMode('verification')}
+            className={`px-3 py-1 rounded text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              documentMode === 'verification'
+                ? 'bg-blue-700 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>Record Verification Form (Non-Certificate)</span>
+          </button>
         </div>
 
         {/* Paper Size Preview Selector */}
@@ -781,12 +924,15 @@ export const PrintableCertification: React.FC<PrintableCertificationProps> = ({
           {certList.length > 1 ? (
             <span className="text-xs text-blue-800 font-semibold hidden md:flex items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-200">
               <Layers2 className="w-3.5 h-3.5 text-blue-700" />
-              <span>Bulk Batch: {certList.length} Certificates ({settings.currencySymbol}{totalAmount.toFixed(2)})</span>
+              <span>
+                Bulk: {certList.length} {documentMode === 'certification' ? 'Certificates' : 'Verification Forms'}
+                {documentMode === 'certification' && ` (${settings.currencySymbol}${totalAmount.toFixed(2)})`}
+              </span>
             </span>
           ) : (
             <span className="text-xs text-emerald-700 font-medium hidden sm:flex items-center gap-1 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
               <CheckCircle className="w-3.5 h-3.5" />
-              <span>1 Certificate Ready</span>
+              <span>1 {documentMode === 'certification' ? 'Certificate' : 'Verification Form'} Ready</span>
             </span>
           )}
 
@@ -796,7 +942,13 @@ export const PrintableCertification: React.FC<PrintableCertificationProps> = ({
             className="px-4 py-2 text-xs font-bold text-white bg-blue-700 hover:bg-blue-800 rounded-lg shadow-md hover:shadow-lg flex items-center gap-1.5 transition-all cursor-pointer"
           >
             <Printer className="w-4 h-4" />
-            <span>{certList.length > 1 ? `Print All (${certList.length} Certificates)` : 'Print Form'}</span>
+            <span>
+              {certList.length > 1
+                ? `Print All (${certList.length} ${documentMode === 'certification' ? 'Certificates' : 'Verification Forms'})`
+                : documentMode === 'certification'
+                ? 'Print Certificate'
+                : 'Print Verification Form'}
+            </span>
           </button>
         </div>
       </div>
@@ -812,6 +964,7 @@ export const PrintableCertification: React.FC<PrintableCertificationProps> = ({
               index={index}
               total={certList.length}
               isLast={index === certList.length - 1}
+              documentMode={documentMode}
               onOpenScanModal={setScanModalData}
             />
           ))}
