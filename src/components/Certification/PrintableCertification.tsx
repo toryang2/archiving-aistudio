@@ -588,7 +588,7 @@ STATUS: OFFICIAL RECORD ARCHIVE VERIFIED`;
             </div>
           </div>
 
-          {/* OFFICIAL QR VERIFICATION BASE: Shows Lot Number and Ref ID */}
+          {/* OFFICIAL QR VERIFICATION BASE - Flush Square QR */}
           <div
             onClick={() => onOpenScanModal?.({
               lotNumber: resolvedLotNumber,
@@ -599,31 +599,16 @@ STATUS: OFFICIAL RECORD ARCHIVE VERIFIED`;
               ownerName: headerOwner,
               receiptNumber: certification.receiptNumber,
             })}
-            className="w-24 sm:w-28 shrink-0 flex flex-col items-center justify-between p-1.5 border-2 border-slate-900 rounded-xs bg-white text-center self-stretch transition-all group hover:border-blue-700 cursor-pointer print:cursor-default"
-            title="Official QR Verification Base - Click to preview scanned data"
+            className="shrink-0 flex items-center justify-center p-1 bg-white cursor-pointer print:cursor-default"
+            title="Click to preview scanned QR data"
           >
-            <div className="flex items-center gap-1 text-[7px] font-sans font-black uppercase tracking-wider text-slate-900 leading-none">
-              <QrCode className="w-2.5 h-2.5 text-blue-900 print:text-slate-900" />
-              <span>QR Base</span>
-            </div>
-
-            <div className="p-1 bg-white border border-slate-300 rounded-xs group-hover:border-blue-500 transition-colors my-0.5">
-              <QRCodeSVG
-                value={qrScannedData}
-                size={58}
-                level="M"
-                includeMargin={false}
-              />
-            </div>
-
-            <div className="font-sans leading-tight text-center w-full">
-              <span className="text-[6.5px] uppercase font-black text-slate-900 tracking-tight block truncate">
-                Lot: {resolvedLotNumber}
-              </span>
-              <span className="font-mono text-[6px] text-slate-600 font-semibold block truncate">
-                Ref: {resolvedRefId}
-              </span>
-            </div>
+            <QRCodeSVG
+              value={qrScannedData}
+              size={72}
+              level="M"
+              includeMargin={false}
+              className="block"
+            />
           </div>
         </div>
 
