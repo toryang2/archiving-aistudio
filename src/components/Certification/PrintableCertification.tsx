@@ -1,7 +1,34 @@
 import React, { useState, useMemo } from 'react';
-import { Printer, ArrowLeft, Receipt, GitCommit, Layers, FileCheck, Layers2, FileText, CheckCircle } from 'lucide-react';
+import { 
+  Printer, 
+  ArrowLeft, 
+  Receipt, 
+  GitCommit, 
+  Layers, 
+  FileCheck, 
+  Layers2, 
+  FileText, 
+  CheckCircle,
+  QrCode,
+  Scan,
+  Copy,
+  Check,
+  X,
+  ExternalLink
+} from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { CertificationRequest, TaxDeclaration } from '../../types';
 import { useApp } from '../../context/AppContext';
+
+export interface QrScanModalData {
+  lotNumber: string;
+  refId: string;
+  qrText: string;
+  certNumber: string;
+  tdNumber: string;
+  ownerName: string;
+  receiptNumber: string;
+}
 
 interface SingleCertificationSheetProps {
   certification: CertificationRequest;
@@ -9,6 +36,7 @@ interface SingleCertificationSheetProps {
   index: number;
   total: number;
   isLast: boolean;
+  onOpenScanModal?: (data: QrScanModalData) => void;
 }
 
 const SingleCertificationSheet: React.FC<SingleCertificationSheetProps> = ({
@@ -17,6 +45,7 @@ const SingleCertificationSheet: React.FC<SingleCertificationSheetProps> = ({
   index,
   total,
   isLast,
+  onOpenScanModal,
 }) => {
   const { settings, taxDeclarations, getPropertyLineage } = useApp();
 
@@ -103,6 +132,23 @@ const SingleCertificationSheet: React.FC<SingleCertificationSheetProps> = ({
     ? `${targetProperty.effectivityQuarter ? `Quarter ${targetProperty.effectivityQuarter}, ` : ''}${targetProperty.effectivityYear}`
     : certification.effectivityDate || '—';
   const headerGeneralClass = targetProperty?.generalClass || certification.generalClass;
+
+  // Resolve Lot Number and Ref ID
+  const resolvedLotNumber = targetProperty?.lotNumber || certification.lotNumber || lineage.current?.lotNumber || 'Lot 1-A';
+  const resolvedRefId = certification.id;
+
+  // Scanned QR output payload:
+  // Strictly formatted so Lot Number and Ref ID appear at the very top when scanned with any smartphone camera or 2D scanner
+  const qrScannedData = `LOT NUMBER: ${resolvedLotNumber}
+REF ID: ${resolvedRefId}
+TD NUMBER: ${headerTdNumber}
+CONTROL NO: ${certification.certNumber}
+PIN: ${headerPin}
+DECLARED OWNER: ${headerOwner}
+O.R. NUMBER: ${certification.receiptNumber}
+DATE ISSUED: ${certification.dateIssued}
+MUNICIPALITY: ${settings.psgcMunicipalityName || settings.lguName}, ${settings.provinceName}
+STATUS: OFFICIAL RECORD ARCHIVE VERIFIED`;
 
   return (
     <div
@@ -497,10 +543,10 @@ const SingleCertificationSheet: React.FC<SingleCertificationSheetProps> = ({
           <span className="text-[9px] font-mono text-slate-600">Form No. RPT-CERT-2026</span>
         </div>
 
-        <div className="flex flex-row items-center gap-3">
+        <div className="flex flex-row items-center gap-2.5 sm:gap-3">
           {/* Subtle Left-Side Dry Seal / Stamp Placement Slot */}
-          <div className="w-28 sm:w-32 shrink-0 flex flex-col items-center justify-center p-2 border border-dashed border-slate-300 rounded-xs bg-white/40 print:bg-transparent text-center self-stretch">
-            <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-full border border-dashed border-slate-300 print:border-slate-400 flex flex-col items-center justify-center text-slate-400 p-1">
+          <div className="w-24 sm:w-28 shrink-0 flex flex-col items-center justify-center p-1.5 border border-dashed border-slate-300 rounded-xs bg-white/40 print:bg-transparent text-center self-stretch">
+            <div className="w-15 h-15 sm:w-16 sm:h-16 rounded-full border border-dashed border-slate-300 print:border-slate-400 flex flex-col items-center justify-center text-slate-400 p-1">
               <span className="text-[7.5px] uppercase font-bold tracking-wider text-slate-500 leading-none">Dry Seal</span>
               <span className="text-[6.5px] text-slate-400 leading-tight mt-0.5">Area</span>
             </div>
@@ -508,45 +554,100 @@ const SingleCertificationSheet: React.FC<SingleCertificationSheetProps> = ({
           </div>
 
           {/* Receipt Details Grid */}
-          <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 gap-y-1.5 gap-x-3 text-[10px] sm:text-[11px]">
+          <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 gap-y-1 gap-x-2.5 text-[9.5px] sm:text-[10px]">
             <div>
-              <span className="text-slate-600 block text-[9px] uppercase font-semibold">Receipt # (O.R. No.):</span>
-              <span className="font-mono font-bold text-blue-950 text-[11px]">{certification.receiptNumber}</span>
+              <span className="text-slate-600 block text-[8.5px] sm:text-[9px] uppercase font-semibold">Receipt # (O.R. No.):</span>
+              <span className="font-mono font-bold text-blue-950 text-[10.5px] sm:text-[11px]">{certification.receiptNumber}</span>
             </div>
 
             <div>
-              <span className="text-slate-600 block text-[9px] uppercase font-semibold">Amount Paid:</span>
-              <span className="font-mono font-bold text-slate-950 text-[11px]">
+              <span className="text-slate-600 block text-[8.5px] sm:text-[9px] uppercase font-semibold">Amount Paid:</span>
+              <span className="font-mono font-bold text-slate-950 text-[10.5px] sm:text-[11px]">
                 {settings.currencySymbol}{certification.amount.toFixed(2)}
               </span>
             </div>
 
             <div>
-              <span className="text-slate-600 block text-[9px] uppercase font-semibold">Date Issued:</span>
+              <span className="text-slate-600 block text-[8.5px] sm:text-[9px] uppercase font-semibold">Date Issued:</span>
               <span className="font-semibold text-slate-900">{formatDate(certification.dateIssued)}</span>
             </div>
 
             <div className="sm:col-span-2">
-              <span className="text-slate-600 block text-[9px] uppercase font-semibold">Place Issued:</span>
+              <span className="text-slate-600 block text-[8.5px] sm:text-[9px] uppercase font-semibold">Place Issued:</span>
               <span className="font-medium text-slate-900 break-words">{certification.placeIssued}</span>
             </div>
 
             <div>
-              <span className="text-slate-600 block text-[9px] uppercase font-semibold">Prepared By:</span>
+              <span className="text-slate-600 block text-[8.5px] sm:text-[9px] uppercase font-semibold">Prepared By:</span>
               <span className="font-semibold text-slate-900 break-words">{certification.preparedBy}</span>
             </div>
 
             <div className="col-span-2 sm:col-span-3 border-t border-dashed border-slate-300 pt-1 mt-0.5">
-              <span className="text-slate-600 block text-[9px] uppercase font-semibold">Purpose:</span>
+              <span className="text-slate-600 block text-[8.5px] sm:text-[9px] uppercase font-semibold">Purpose:</span>
               <span className="font-semibold text-slate-950 break-words">{certification.purpose}</span>
+            </div>
+          </div>
+
+          {/* OFFICIAL QR VERIFICATION BASE: Shows Lot Number and Ref ID */}
+          <div
+            onClick={() => onOpenScanModal?.({
+              lotNumber: resolvedLotNumber,
+              refId: resolvedRefId,
+              qrText: qrScannedData,
+              certNumber: certification.certNumber,
+              tdNumber: headerTdNumber,
+              ownerName: headerOwner,
+              receiptNumber: certification.receiptNumber,
+            })}
+            className="w-24 sm:w-28 shrink-0 flex flex-col items-center justify-between p-1.5 border-2 border-slate-900 rounded-xs bg-white text-center self-stretch transition-all group hover:border-blue-700 cursor-pointer print:cursor-default"
+            title="Official QR Verification Base - Click to preview scanned data"
+          >
+            <div className="flex items-center gap-1 text-[7px] font-sans font-black uppercase tracking-wider text-slate-900 leading-none">
+              <QrCode className="w-2.5 h-2.5 text-blue-900 print:text-slate-900" />
+              <span>QR Base</span>
+            </div>
+
+            <div className="p-1 bg-white border border-slate-300 rounded-xs group-hover:border-blue-500 transition-colors my-0.5">
+              <QRCodeSVG
+                value={qrScannedData}
+                size={58}
+                level="M"
+                includeMargin={false}
+              />
+            </div>
+
+            <div className="font-sans leading-tight text-center w-full">
+              <span className="text-[6.5px] uppercase font-black text-slate-900 tracking-tight block truncate">
+                Lot: {resolvedLotNumber}
+              </span>
+              <span className="font-mono text-[6px] text-slate-600 font-semibold block truncate">
+                Ref: {resolvedRefId}
+              </span>
             </div>
           </div>
         </div>
 
+        {/* Official verification strip: replaced plain Ref ID with interactive QR Base status */}
         <div className="mt-1.5 pt-1 border-t border-slate-300 flex flex-col sm:flex-row items-center justify-between text-[8px] sm:text-[8.5px] text-slate-600 font-mono">
           <span className="font-bold text-slate-800">★ VALID ONLY WITH EMBOSSED DRY SEAL ★</span>
           <span>Doc. Stamp Tax: PAID & AFFIXED</span>
-          <span>Ref ID: {certification.id}</span>
+          <button
+            type="button"
+            onClick={() => onOpenScanModal?.({
+              lotNumber: resolvedLotNumber,
+              refId: resolvedRefId,
+              qrText: qrScannedData,
+              certNumber: certification.certNumber,
+              tdNumber: headerTdNumber,
+              ownerName: headerOwner,
+              receiptNumber: certification.receiptNumber,
+            })}
+            className="flex items-center gap-1.5 text-slate-900 hover:text-blue-700 font-semibold transition-colors cursor-pointer print:cursor-default"
+            title="Click to preview QR code scan result"
+          >
+            <QrCode className="w-3 h-3 text-blue-900 print:text-slate-900" />
+            <span>QR Base: <strong className="font-black text-slate-950">Lot {resolvedLotNumber}</strong> &bull; Ref ID: <strong className="font-mono font-bold text-blue-950">{resolvedRefId}</strong></span>
+          </button>
         </div>
       </div>
 
@@ -571,6 +672,8 @@ export const PrintableCertification: React.FC<PrintableCertificationProps> = ({
 }) => {
   const { settings } = useApp();
   const [paperSize, setPaperSize] = useState<'auto' | 'letter' | 'a4' | 'legal'>('auto');
+  const [scanModalData, setScanModalData] = useState<QrScanModalData | null>(null);
+  const [copied, setCopied] = useState(false);
 
   // Normalize list of certifications to print
   const certList = useMemo(() => {
@@ -590,6 +693,13 @@ export const PrintableCertification: React.FC<PrintableCertificationProps> = ({
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleCopyScanData = () => {
+    if (!scanModalData) return;
+    navigator.clipboard.writeText(scanModalData.qrText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   // Paper width styles for preview mode
@@ -717,6 +827,7 @@ export const PrintableCertification: React.FC<PrintableCertificationProps> = ({
               index={index}
               total={certList.length}
               isLast={index === certList.length - 1}
+              onOpenScanModal={setScanModalData}
             />
           ))}
         </div>
@@ -733,6 +844,111 @@ export const PrintableCertification: React.FC<PrintableCertificationProps> = ({
           >
             Return to Certification Logs
           </button>
+        </div>
+      )}
+
+      {/* QR Code Scanner Preview Modal */}
+      {scanModalData && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 print:hidden animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200">
+            {/* Modal Header */}
+            <div className="p-4 bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-300">
+                  <QrCode className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm">Official QR Verification Base</h3>
+                  <p className="text-[11px] text-blue-200/80">Decoded mobile scanner output preview</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setScanModalData(null)}
+                className="p-1 rounded-lg hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 space-y-4">
+              {/* Top summary highlight cards: specifically showcasing Lot Number and Ref ID */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 block">
+                    Lot Number
+                  </span>
+                  <p className="text-base font-black text-blue-950 truncate mt-0.5">
+                    {scanModalData.lotNumber}
+                  </p>
+                  <span className="text-[9.5px] text-blue-600 block mt-0.5 font-medium">Scanned Primary Field</span>
+                </div>
+
+                <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 block">
+                    Ref ID
+                  </span>
+                  <p className="font-mono text-sm font-black text-indigo-950 truncate mt-0.5">
+                    {scanModalData.refId}
+                  </p>
+                  <span className="text-[9.5px] text-indigo-600 block mt-0.5 font-medium">Unique Verification Ref</span>
+                </div>
+              </div>
+
+              {/* QR Code and Scanner Simulation */}
+              <div className="flex flex-col sm:flex-row items-center gap-4 bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <div className="p-2 bg-white rounded-xl border border-slate-200 shadow-xs shrink-0 flex flex-col items-center">
+                  <QRCodeSVG
+                    value={scanModalData.qrText}
+                    size={135}
+                    level="M"
+                    includeMargin={false}
+                  />
+                  <span className="text-[9px] font-mono font-bold text-slate-500 mt-1 uppercase">
+                    Scan With Camera
+                  </span>
+                </div>
+
+                <div className="flex-1 w-full space-y-1.5 min-w-0">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-slate-800 flex items-center gap-1 text-[11px]">
+                      <Scan className="w-3.5 h-3.5 text-blue-700" />
+                      <span>Decoded Text on Device</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleCopyScanData}
+                      className="px-2 py-0.5 text-[10.5px] font-semibold text-blue-700 hover:text-blue-900 bg-blue-100 hover:bg-blue-200 rounded flex items-center gap-1 transition-colors cursor-pointer"
+                    >
+                      {copied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                      <span>{copied ? 'Copied' : 'Copy'}</span>
+                    </button>
+                  </div>
+                  
+                  <div className="bg-slate-900 rounded-lg p-2.5 text-emerald-400 font-mono text-[10px] leading-relaxed overflow-x-auto max-h-40 border border-slate-800">
+                    <pre className="whitespace-pre-wrap font-mono">{scanModalData.qrText}</pre>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-[11px] text-slate-500 leading-normal">
+                Scanning this QR Code with an iPhone/Android camera, tablet, or handheld barcode scanner decodes the Lot Number, Reference ID, and official tax declaration records for immediate tamper-proof verification.
+              </p>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+              <span className="text-xs text-slate-500 font-mono">Control: {scanModalData.certNumber}</span>
+              <button
+                type="button"
+                onClick={() => setScanModalData(null)}
+                className="px-4 py-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

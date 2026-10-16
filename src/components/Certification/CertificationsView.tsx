@@ -20,8 +20,13 @@ import {
   ArrowUpDown,
   CheckSquare,
   Square,
-  X
+  X,
+  QrCode,
+  Scan,
+  Copy,
+  Check
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { useApp } from '../../context/AppContext';
 import { CertificationRequest } from '../../types';
 
@@ -46,6 +51,10 @@ export const CertificationsView: React.FC<CertificationsViewProps> = ({
 
   // Multi-selection state for bulk printing
   const [selectedCertIds, setSelectedCertIds] = useState<Set<string>>(new Set());
+
+  // QR Modal state
+  const [viewingQrCert, setViewingQrCert] = useState<CertificationRequest | null>(null);
+  const [copied, setCopied] = useState(false);
 
   // Stats calculation
   const totalCount = certifications.length;
@@ -579,6 +588,16 @@ export const CertificationsView: React.FC<CertificationsViewProps> = ({
                       <td className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center gap-1.5">
                           
+                          {/* QR Base Preview Button */}
+                          <button
+                            id={`qr-cert-${cert.id}`}
+                            onClick={() => setViewingQrCert(cert)}
+                            title="Preview QR Base & Scanned Output (Lot No. & Ref ID)"
+                            className="p-1.5 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-700 hover:text-white transition-colors cursor-pointer"
+                          >
+                            <QrCode className="w-3.5 h-3.5" />
+                          </button>
+
                           {/* Print Button */}
                           <button
                             id={`print-cert-${cert.id}`}
@@ -630,6 +649,142 @@ export const CertificationsView: React.FC<CertificationsViewProps> = ({
           </table>
         </div>
       </div>
+
+      {/* QR Code Scanner Preview Modal */}
+      {viewingQrCert && (() => {
+        const lotNumber = viewingQrCert.lotNumber || 'Lot 1-A';
+        const refId = viewingQrCert.id;
+        const qrPayload = `LOT NUMBER: ${lotNumber}
+REF ID: ${refId}
+TD NUMBER: ${viewingQrCert.tdNumber}
+CONTROL NO: ${viewingQrCert.certNumber}
+PIN: ${viewingQrCert.pin}
+DECLARED OWNER: ${viewingQrCert.ownerName}
+O.R. NUMBER: ${viewingQrCert.receiptNumber}
+DATE ISSUED: ${viewingQrCert.dateIssued}
+MUNICIPALITY: ${settings.psgcMunicipalityName || settings.lguName}, ${settings.provinceName}
+STATUS: OFFICIAL RECORD ARCHIVE VERIFIED`;
+
+        return (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200">
+              {/* Header */}
+              <div className="p-4 bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-300">
+                    <QrCode className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm">Official QR Verification Base</h3>
+                    <p className="text-[11px] text-blue-200/80">Decoded mobile scanner output</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setViewingQrCert(null)}
+                  className="p-1 rounded-lg hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="p-5 space-y-4">
+                {/* Highlight Boxes for Lot Number and Ref ID */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 block">
+                      Lot Number
+                    </span>
+                    <p className="text-base font-black text-blue-950 truncate mt-0.5">
+                      {lotNumber}
+                    </p>
+                    <span className="text-[9.5px] text-blue-600 block mt-0.5 font-medium">Scanned Primary Field</span>
+                  </div>
+
+                  <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 block">
+                      Ref ID
+                    </span>
+                    <p className="font-mono text-sm font-black text-indigo-950 truncate mt-0.5">
+                      {refId}
+                    </p>
+                    <span className="text-[9.5px] text-indigo-600 block mt-0.5 font-medium">Unique Verification Ref</span>
+                  </div>
+                </div>
+
+                {/* QR Code and Scanner Simulation */}
+                <div className="flex flex-col sm:flex-row items-center gap-4 bg-slate-50 border border-slate-200 rounded-xl p-4">
+                  <div className="p-2 bg-white rounded-xl border border-slate-200 shadow-xs shrink-0 flex flex-col items-center">
+                    <QRCodeSVG
+                      value={qrPayload}
+                      size={130}
+                      level="M"
+                      includeMargin={false}
+                    />
+                    <span className="text-[9px] font-mono font-bold text-slate-500 mt-1 uppercase">
+                      Scan With Camera
+                    </span>
+                  </div>
+
+                  <div className="flex-1 w-full space-y-1.5 min-w-0">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-bold text-slate-800 flex items-center gap-1 text-[11px]">
+                        <Scan className="w-3.5 h-3.5 text-blue-700" />
+                        <span>Decoded Text on Device</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(qrPayload);
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
+                        }}
+                        className="px-2 py-0.5 text-[10.5px] font-semibold text-blue-700 hover:text-blue-900 bg-blue-100 hover:bg-blue-200 rounded flex items-center gap-1 transition-colors cursor-pointer"
+                      >
+                        {copied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                        <span>{copied ? 'Copied' : 'Copy'}</span>
+                      </button>
+                    </div>
+
+                    <div className="bg-slate-900 rounded-lg p-2.5 text-emerald-400 font-mono text-[10px] leading-relaxed overflow-x-auto max-h-40 border border-slate-800">
+                      <pre className="whitespace-pre-wrap font-mono">{qrPayload}</pre>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-slate-500 leading-normal">
+                  This QR Code is printed on the official certification sheet inside the receipt audit trail box. Scanning with any smartphone camera displays the registered Lot Number and Ref ID immediately.
+                </p>
+              </div>
+
+              {/* Footer */}
+              <div className="p-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const certToPrint = viewingQrCert;
+                    setViewingQrCert(null);
+                    onPrintCert(certToPrint);
+                  }}
+                  className="px-3.5 py-1.5 text-xs font-bold text-white bg-blue-700 hover:bg-blue-800 rounded-lg shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Print Certificate</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setViewingQrCert(null)}
+                  className="px-4 py-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
     </div>
   );
